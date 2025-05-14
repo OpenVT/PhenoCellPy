@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "phenocellpy"
-version = "0.0.9a1"
+version = "0.0.9a2"
 description = "Tools for phenotypic characterization of cell behavior"
 readme = "README.md"
 requires-python = ">=3.8"
