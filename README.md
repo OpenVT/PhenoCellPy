@@ -50,10 +50,10 @@ PhenoCellPy only requirements are
 PhenoCellPy's v0.0.9-alpha and above are packaged through `pip`. You can install it using
 
 ```commandline
-pip install phenocellpy==0.0.9a0
+pip install phenocellpy
 ```
 
-The project can be found in [PyPi](https://pypi.org/project/phenocellpy/0.0.9a0/)
+The project can be found in [PyPi](https://pypi.org/project/phenocellpy/)
 
 Conda distribution coming soon
 
