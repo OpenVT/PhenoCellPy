@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "phenocellpy"
-version = "0.0.9a0"
+version = "0.0.9a1"
 description = "Tools for phenotypic characterization of cell behavior"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -13,6 +13,10 @@ dependencies = [
     "scipy"
 ]
 license = { file = "LICENSE" }
+maintainers = [
+  {name = "OpenVT"},
+  {name = "Juliano Ferrari Gianlupi"}
+]
 authors = [
     { name = "Juliano Ferrari Gianlupi" }
 ]
