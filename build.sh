@@ -1,18 +1,18 @@
-#!/bin/bash
-set -e  # exit on first error
-
-# Copy required files into .package
+set -e
 cp LICENSE .package/LICENSE
 cp README.md .package/README.md
 
-# Run build
+# Clean and symlink source dirs
+rm -rf .package/phenocellpy .package/CC3D_examples .package/DeveloperTestZone .package/TF_examples
+cp -r phenocellpy .package/
+cp -r CC3D_examples .package/
+cp -r DeveloperTestZone .package/
+cp -r TF_examples .package/
+
 python -m build .package
 
-# Clean up temporary files
-rm .package/LICENSE
-rm .package/README.md
+rm -rf .package/LICENSE .package/README.md \
+       .package/phenocellpy .package/CC3D_examples .package/DeveloperTestZone .package/TF_examples
 
-# Move output to .dist (remove if exists)
 rm -rf .dist
 mv .package/dist .dist
-rm -rf .package/dist

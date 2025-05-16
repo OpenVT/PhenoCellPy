@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "phenocellpy"
-version = "0.0.9a2"
+version = "0.0.9a3"
 description = "Tools for phenotypic characterization of cell behavior"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -13,10 +13,6 @@ dependencies = [
     "scipy"
 ]
 license = { file = "LICENSE" }
-maintainers = [
-  {name = "OpenVT"},
-  {name = "Juliano Ferrari Gianlupi"}
-]
 authors = [
     { name = "Juliano Ferrari Gianlupi" }
 ]
@@ -25,8 +21,19 @@ authors = [
 Homepage = "https://github.com/OpenVT/PhenoCellPy"
 Publication = "https://doi.org/10.1101/2023.04.12.535625"
 
-[tool.hatch.build]
-sources = [".."]
-
 [tool.hatch.build.targets.wheel]
 packages = ["phenocellpy"]
+include = [
+    "phenocellpy",
+    "CC3D_examples",
+    "DeveloperTestZone",
+    "TF_examples"
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "phenocellpy",
+    "CC3D_examples",
+    "DeveloperTestZone",
+    "TF_examples"
+]
