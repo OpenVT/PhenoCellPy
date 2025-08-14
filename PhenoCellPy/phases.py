@@ -824,9 +824,7 @@ class Ki67PositivePreMitotic(Ki67Positive):
                  cytoplasm_fluid=None, cytoplasm_solid=None, cytoplasm_solid_target=None,
                  target_cytoplasm_to_nuclear_ratio=None, calcified_fraction=None, fluid_change_rate=None,
                  relative_rupture_volume=None, user_phase_time_step=None, user_phase_time_step_args=None):
-        if entry_function is None:
-            # otherwise it will be defaulted to the halving target volume function by Ki67Positive
-            entry_function = False
+
 
         super().__init__(index=index, previous_phase_index=previous_phase_index, next_phase_index=next_phase_index,
                          dt=dt, time_unit=time_unit, space_unit=space_unit,

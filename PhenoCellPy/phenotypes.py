@@ -794,7 +794,7 @@ class Ki67Advanced(Phenotype):
                  division_at_phase_exits=(False, True, False), removal_at_phase_exits=(False, False, False),
                  fixed_durations=(False, True, True), phase_durations: list = (3.62 * 60, 13.0 * 60.0, 2.5 * 60),
                  entry_functions=(None, None, None), entry_functions_args=(None, None, None),
-                 exit_functions=(None, None, None), exit_functions_args=(None, None, None),
+                 exit_functions=(None, False, None), exit_functions_args=(None, None, None),
                  arrest_functions=(None, None, None), arrest_functions_args=(None, None, None),
                  check_transition_to_next_phase_functions=(None, None, None),
                  check_transition_to_next_phase_functions_args: list = (None, None, None), simulated_cell_volume=None,

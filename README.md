@@ -1,3 +1,7 @@
+## Official repository moved
+
+Now the official repository for PhenocellPy is https://github.com/OpenVT/PhenoCellPy
+
 # PhenoCellPy
 
 **See [publication](https://doi.org/10.1101/2023.04.12.535625) for more information**
