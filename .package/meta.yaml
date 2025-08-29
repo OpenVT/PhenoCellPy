@@ -1,6 +1,6 @@
 package:
   name: phenocellpy
-  version: 0.0.9a0
+  version: 0.0.9a4
 
 
 about:
@@ -17,9 +17,7 @@ source:
 
 build:
   noarch: python
-  script: "{{ PYTHON }} -m pip install .package --no-deps -vv" #"{{ PYTHON }} -m pip install . -vv"
-#    - mkdir -p $PREFIX/lib/python{{ python }}/site-packages/PhenoCellPy/
-#    - cp -r * $PREFIX/lib/python{{ python }}/site-packages/PhenoCellPy/
+  script: "{{ PYTHON }} -m pip install .package --no-deps -vv"
 
 requirements:
   host:

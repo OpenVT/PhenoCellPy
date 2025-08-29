@@ -34,7 +34,7 @@ from cc3d.core.PySteppables import *
 
 from numpy import random as rng
 
-import PhenoCellPy as pcp
+import phenocellpy as pcp
 
 
 class NecrosisSteppable(SteppableBasePy):

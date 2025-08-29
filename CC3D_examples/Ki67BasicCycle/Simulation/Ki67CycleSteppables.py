@@ -40,7 +40,7 @@ from numpy import median, quantile, nan
 from os.path import abspath, dirname, join
 
 
-import PhenoCellPy as pcp
+import phenocellpy as pcp
 
 
 class ConstraintInitializerSteppable(SteppableBasePy):
