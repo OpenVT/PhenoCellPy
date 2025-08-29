@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from warnings import warn
 
-import PhenoCellPy.phases as Phases
+import phenocellpy.phases as Phases
 
 from copy import deepcopy
 
