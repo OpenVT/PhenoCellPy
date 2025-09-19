@@ -36,7 +36,7 @@ import numpy as np
 from os.path import abspath
 import time
 
-import PhenoCellPy as pcp
+import phenocellpy as pcp
 
 
 def get_radius_sphere(volume):
