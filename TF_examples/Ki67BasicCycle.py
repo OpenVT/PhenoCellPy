@@ -189,3 +189,14 @@ axs[1].set_xlabel("Time (hours)")
 axs[1].set_ylabel("Volumes")
 
 plt.show()
+
+file_object = open('TF_data.txt', 'w') 
+
+# Write content to the file
+file_object.write(f"{pop} \n")
+file_object.write(f"{median_volumes} \n")
+file_object.write(f"{min_volumes} \n")
+file_object.write(f"{max_volumes} \n")
+
+# Close the file to ensure all changes are saved
+file_object.close() 
