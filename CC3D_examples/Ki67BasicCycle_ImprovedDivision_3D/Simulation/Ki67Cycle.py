@@ -1,4 +1,4 @@
-<!--
+"""
 BSD 3-Clause License
 
 Copyright (c) 2023, Juliano Ferrari Gianlupi
@@ -28,46 +28,28 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
--->
+"""
+from cc3d import CompuCellSetup
+        
 
-<CompuCell3D Revision="20210612" Version="4.2.5">
-   
-   <Metadata>
-      
-      <!-- Basic properties simulation -->
-      <NumberOfProcessors>1</NumberOfProcessors>
-      <DebugOutputFrequency>200</DebugOutputFrequency>
-      <!-- <NonParallelModule Name="Potts"/> -->
-   </Metadata>
-   
-   <Potts>
-      
-      <!-- Basic properties of CPM (GGH) algorithm -->
-      <Dimensions x="1024" y="1024" z="1"/>
-      <Steps>4000</Steps>
-      <Temperature>10.0</Temperature>
-      <NeighborOrder>1</NeighborOrder>
-   </Potts>
-   
-<Plugin Name="CellType">
-   
-   <CellType TypeId="0" TypeName="Medium"/>
-   <CellType TypeId="1" TypeName="cell"/>
-</Plugin>
-   
-   <Plugin Name="Volume"/>
-   
-   <Plugin Name="CenterOfMass">
-      
-      <!-- Module tracking center of mass of each cell -->
-   </Plugin>
-   
-<Plugin Name="Contact">
-   <Energy Type1="Medium" Type2="Medium">10.0</Energy>
-   <Energy Type1="Medium" Type2="cell">10.0</Energy>
-   <Energy Type1="cell" Type2="cell">10.0</Energy>
-   <NeighborOrder>4</NeighborOrder>
-</Plugin>
-   
- 
-</CompuCell3D>
+
+from Ki67CycleSteppables import ConstraintInitializerSteppable
+
+CompuCellSetup.register_steppable(steppable=ConstraintInitializerSteppable(frequency=1))
+
+
+
+
+# from Ki67CycleSteppables import GrowthSteppable
+
+# CompuCellSetup.register_steppable(steppable=GrowthSteppable(frequency=1))
+
+
+
+
+from Ki67CycleSteppables import MitosisSteppable
+
+CompuCellSetup.register_steppable(steppable=MitosisSteppable(frequency=1))
+
+
+CompuCellSetup.run()

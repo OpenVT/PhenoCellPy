@@ -65,13 +65,15 @@ class ConstraintInitializerSteppable(SteppableBasePy):
 
         dt = 5  # 5 min/mcs
 
-        ki67_basic = pcp.phenotypes.Ki67Basic(dt=dt)
+        ki67_basic = pcp.phenotypes.Ki67Basic(dt=dt, nuclear_volume_change_rate=[None,0.0055], 
+                                                                  cytoplasm_volume_change_rate=[None,0.0045],
+                                                                  fluid_change_rate=[None,0.05])
 
         self.volume_conversion_unit = self.target_volume / ki67_basic.current_phase.volume.total
 
         for cell in self.cell_list:
             cell.targetVolume = self.target_volume
-            cell.lambdaVolume = 2.0
+            cell.lambdaVolume = 20.0
             pcp.utils.add_phenotype_to_CC3D_cell(cell, ki67_basic)
             cell.dict["phase_index_plus_1"] = cell.dict["phenotype"].current_phase.index + 1
 
@@ -86,7 +88,7 @@ class MitosisSteppable(MitosisSteppableBase):
 
         self.previous_number_cells = 0
 
-        self.plot = False
+        self.plot = True
 
         self.save = False
 

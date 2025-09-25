@@ -39,7 +39,7 @@ from numpy import median, quantile, nan
 
 from os.path import abspath, dirname, join
 
-import phenocellpy as pcp
+import PhenoCellPy as pcp
 
 
 def Ki67pos_transition(*args):
@@ -59,16 +59,17 @@ class ConstraintInitializerSteppable(SteppableBasePy):
     def start(self):
         side = 10
 
-        self.target_volume = side * side
+        self.target_volume = side * side * side
         self.doubling_volume = 2 * self.target_volume
 
         x = self.dim.x // 2 - side // 2
         y = self.dim.x // 2 - side // 2
+        z = self.dim.z // 2 - side // 2
 
         cell = self.new_cell(self.CELL)
-        self.cell_field[x:x + side, y:y + side, 0] = cell
+        self.cell_field[x:x + side, y:y + side, z:z + side] = cell
 
-        dt = 1  # 5 min/mcs
+        dt = 5  # 5 min/mcs
         #ki67_basic_modified_transition = pcp.phenotypes.Ki67Basic(dt=dt, 
         #                                                          check_transition_to_next_phase_functions=[None,
         #                                                                                                      Ki67pos_transition],

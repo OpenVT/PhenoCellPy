@@ -68,7 +68,9 @@ density = mass / ((4 / 3) * np.pi * radius * radius * radius)
 
 dt = 10  # min/time step
 
-ki67_basic = pcp.phenotypes.Ki67Basic(dt=dt)
+ki67_basic = pcp.phenotypes.Ki67Basic(dt=dt,nuclear_volume_change_rate=[None,0.0055], 
+                                                                  cytoplasm_volume_change_rate=[None,0.0045],
+                                                                  fluid_change_rate=[None,0.05])
 
 global volume_conversion_unit
 volume_conversion_unit = (4 / 3) * np.pi * radius * radius * radius/ki67_basic.current_phase.volume.total
@@ -97,7 +99,6 @@ first_cell.cycle = ki67_basic
 global cells_cycles
 
 cells_cycles = {f"{first_cell.id}": ki67_basic.copy()}
-
 
 fig, axs = plt.subplots(ncols=2)
 # plt.show()
@@ -168,16 +169,34 @@ def step_cycle_and_divide(event):
     if stats:
         time.append(tf.Universe.time*dt/tf.Universe.dt/60)#/24)
         pop.append(len(Cell.items()))
+        min_volumes.append(min(vols))
+        max_volumes.append(max(vols))
+        median_volumes.append(np.median(vols))
     return 0
 
 
 tf.event.on_time(invoke_method=step_cycle_and_divide, period=.9*tf.Universe.dt)
 
 # run the simulator interactive
-tf.run(10)
-
+tf.run(16)
 axs[0].scatter(time, pop)
-axs[0].set_xlabel("Time (days)")
+axs[1].scatter(time, median_volumes)
+axs[1].scatter(time, min_volumes)
+axs[1].scatter(time, max_volumes)
+axs[0].set_xlabel("Time (hours)")
 axs[0].set_ylabel("Population")
+axs[1].set_xlabel("Time (hours)")
+axs[1].set_ylabel("Volumes")
 
 plt.show()
+
+file_object = open('TF_data.txt', 'w') 
+
+# Write content to the file
+file_object.write(f"{pop} \n")
+file_object.write(f"{median_volumes} \n")
+file_object.write(f"{min_volumes} \n")
+file_object.write(f"{max_volumes} \n")
+
+# Close the file to ensure all changes are saved
+file_object.close() 
