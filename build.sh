@@ -3,11 +3,12 @@ cp LICENSE .package/LICENSE
 cp README.md .package/README.md
 
 # Clean and symlink source dirs
-rm -rf .package/phenocellpy .package/CC3D_examples .package/DeveloperTestZone .package/TF_examples
+rm -rf .package/phenocellpy .package/CC3D_examples .package/DeveloperTestZone .package/TF_examples .package/paper
 cp -r phenocellpy .package/
 cp -r CC3D_examples .package/
 cp -r DeveloperTestZone .package/
 cp -r TF_examples .package/
+# Do not copy over the paper sub dir
 
 python -m build .package
 
