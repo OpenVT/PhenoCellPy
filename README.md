@@ -60,10 +60,10 @@ Conda distribution coming soon
 
 ## Importing PhenoCellPy
 
-PhenoCellPy can be included in your project by
+Once the PhenoCellPy package has been installed, PhenoCellPy can be included in your project using the 'import' statement:
 
 ```python
-import PhenoCellPy as pcp
+import phenocellpy as pcp
 ```
 
 # How to cite:
