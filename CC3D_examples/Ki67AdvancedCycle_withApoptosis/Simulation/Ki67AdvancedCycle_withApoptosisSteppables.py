@@ -37,7 +37,7 @@ from numpy.random import random_sample
 import math
 from os.path import abspath, dirname, join
 
-import PhenoCellPy as pcp
+import phenocellpy as pcp
 
 NUM_CELLS = 1000  # Init number of cells
 CELL_WIDTH = 5  # side, pixels
