@@ -1,15 +1,15 @@
 package:
   name: phenocellpy
-  version: 0.0.9a4
+  version: 0.1.0
 
 
 about:
-  home: https://github.com/JulianoGianlupi/PhenoCellPy
+  home: https://github.com/OpenVT/PhenoCellPy
   license: BSD 3-Clause License
   license_file: ../LICENSE
 
 extra:
-  maintainer: Juliano Ferrari Gianlupi
+  maintainer: Juliano Ferrari Gianlupi and Dept Intelligent Sys Eng and Biocomplexity Inst, Indiana University, Bloomington, IN
   publication: https://doi.org/10.1101/2023.04.12.535625
 
 source:

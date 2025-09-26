@@ -2,7 +2,7 @@
 copy LICENSE .package\LICENSE >nul
 copy README.md .package\README.md >nul
 
-rmdir /s /q .package\phenocellpy .package\CC3D_examples .package\DeveloperTestZone .package\TF_examples 2>nul
+rmdir /s /q .package\phenocellpy .package\CC3D_examples .package\DeveloperTestZone .package\TF_examples .package\paper 2>nul
 xcopy /e /i phenocellpy .package\phenocellpy
 xcopy /e /i CC3D_examples .package\CC3D_examples
 xcopy /e /i DeveloperTestZone .package\DeveloperTestZone
