@@ -104,26 +104,25 @@ fig, axs = plt.subplots(ncols=2)
 # plt.show()
 
 global time
-time = []
+time = [0]
 
 global pop
-pop = []
+pop = [1]
 
 global median_volumes
-median_volumes = []
+median_volumes = [40]
 
 global min_volumes
-min_volumes = []
+min_volumes = [40]
 
 global max_volumes
-max_volumes = []
+max_volumes = [40]
 
 def step_cycle_and_divide(event):
 
     # axs[0].scatter(tf.Universe.time, len(Cell.items()), c="b")
     # fig.show()
     # print(tf.Universe.time, len(Cell.items()))
-
     stats = False
     if not tf.Universe.time % 1:
         print(tf.Universe.time, tf.Universe.time*dt/tf.Universe.dt/60)
@@ -193,6 +192,7 @@ plt.show()
 file_object = open('TF_data.txt', 'w') 
 
 # Write content to the file
+file_object.write(f"{time} \n")
 file_object.write(f"{pop} \n")
 file_object.write(f"{median_volumes} \n")
 file_object.write(f"{min_volumes} \n")
