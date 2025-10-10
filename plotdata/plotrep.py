@@ -75,11 +75,12 @@ allx=np.concatenate((allx,x[0:index]))
 ally=np.concatenate((ally,y[0:index]))
 
 popt, pcov = curve_fit(exponential_growth, allx, ally, p0=initial_guess)
+perr = np.sqrt(np.diag(pcov))
 
 # Extract the fitted parameters
 fitted_b = popt
 
-print(f"Fitted parameters for Tissue_Forge: b={fitted_b}")
+print(f"Fitted parameters for Tissue_Forge: b={fitted_b}, stdev={perr}")
 
 #Plot the fitted curve
 x=np.linspace(0,266,16)
@@ -153,15 +154,16 @@ index = find_first_passing_index(y, thresh)
 allx=np.concatenate((allx,x[0:index]))
 ally=np.concatenate((ally,y[0:index]))
 
-plt.scatter(allx, ally, color = 'g', linestyle = 'dashed',
-        marker = 'o',label = "CC3D_2D_Vol")
+#plt.scatter(allx, ally, color = 'g', linestyle = 'dashed',
+#        marker = 'o',label = "CC3D_2D_Vol")
          
 popt, pcov = curve_fit(exponential_growth, allx, ally, p0=initial_guess)
+perr = np.sqrt(np.diag(pcov))
 
 # Extract the fitted parameters
 fitted_b = popt
 
-print(f"Fitted parameters for 1_20: b={fitted_b}")
+print(f"Fitted parameters for 1_20: b={fitted_b}, stdev={perr}")
 
 #Plot the fitted curve
 x=np.linspace(0,266,16)
@@ -229,11 +231,12 @@ ally=np.concatenate((ally,y[0:index]))
 #         marker = 'o',label = "CC3D_3D_Vol")
 
 popt, pcov = curve_fit(exponential_growth, allx, ally, p0=initial_guess)
+perr = np.sqrt(np.diag(pcov))
 
 # Extract the fitted parameters
 fitted_b = popt
 
-print(f"Fitted parameters for 3D: b={fitted_b}")
+print(f"Fitted parameters for 3D: b={fitted_b}, stdev={perr}")
 
 #Plot the fitted curve
 x=np.linspace(0,266,16)
@@ -300,7 +303,7 @@ popt, pcov = curve_fit(exponential_growth, allx, ally, p0=initial_guess)
 # Extract the fitted parameters
 fitted_b = popt
 
-print(f"Fitted parameters for Basic: b={fitted_b}")
+print(f"Fitted parameters for Basic: b={fitted_b}, stdev={perr}")
 
 #Plot the fitted curve
 x=np.linspace(0,266,16)
