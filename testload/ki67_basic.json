@@ -1,0 +1,47 @@
+{
+  "name": "Ki67Basic",
+  "dt": 1.0,
+  "time_unit": "min",
+  "space_unit": "micrometer",
+
+  "phases": [
+    {
+      "name": "Ki67-",
+      "index": 0,
+
+      "timing": {
+        "phase_duration": 275.4,
+        "fixed_duration": false
+      },
+
+      "volume": {
+        "target_fluid_fraction": 0.75
+      },
+
+      "events": {
+        "division_at_phase_exit": false,
+        "removal_at_phase_exit": false
+      }
+    },
+
+    {
+      "name": "Ki67+",
+      "index": 1,
+
+      "timing": {
+        "phase_duration": 930.0,
+        "fixed_duration": true
+      },
+
+      "volume": {
+        "target_fluid_fraction": 0.75,
+        "relative_rupture_volume": 2.0
+      },
+
+      "events": {
+        "division_at_phase_exit": true,
+        "removal_at_phase_exit": false
+      }
+    }
+  ]
+}
