@@ -1,6 +1,7 @@
-from .types import (VolumeConfig, 
-                    TimingConfig, 
-                    EventConfig, 
-                    PhaseConfig, 
-                    PhenotypeConfig,
-                    default_senescent_phase)
+from .types import (VolumeConfig,
+                    VolumeRatesConfig,
+                    TimingConfig,
+                    EventConfig,
+                    FunctionsConfig,
+                    PhaseConfig,
+                    PhenotypeConfig)

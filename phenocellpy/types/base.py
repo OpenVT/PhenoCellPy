@@ -1,4 +1,4 @@
-from dataclasses import fields
+from dataclasses import fields, replace
 
 
 class Validated:
@@ -18,6 +18,22 @@ class Validated:
     def validate(self):
         """Cross-field checks. Override in subclasses."""
         pass
+
+    def fill_none_from(self, defaults):
+        """
+        Returns a copy of this config where the fields that are None take the value of the same field in `defaults`.
+        Nested configs are filled field by field.
+
+        :param defaults: Config of the same class to take the missing values from
+        """
+        changes = {}
+        for f in fields(self):
+            value, default = getattr(self, f.name), getattr(defaults, f.name)
+            if value is None:
+                changes[f.name] = default
+            elif isinstance(value, Validated) and isinstance(default, Validated):
+                changes[f.name] = value.fill_none_from(default)
+        return replace(self, **changes)
 
     @classmethod
     def _reject_unknown_keys(cls, data: dict, known=None):

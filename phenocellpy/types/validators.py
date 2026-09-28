@@ -65,3 +65,24 @@ def non_empty_str(name, value):
         return
     if not isinstance(value, str) or not value:
         raise ValueError(f"'{name}' must be a non-empty string. Got {value!r}.")
+
+
+def function(name, value):
+    if value is None:
+        return
+    if not callable(value):
+        raise TypeError(f"'{name}' must be callable. Got {type(value).__name__}: {value!r}.")
+
+
+def function_or_false(name, value):
+    # several phase classes use `False` to mean "no function" and `None` to mean "use the class' default function"
+    if value is None or value is False:
+        return
+    function(name, value)
+
+
+def sequence(name, value):
+    if value is None:
+        return
+    if not isinstance(value, (list, tuple)):
+        raise TypeError(f"'{name}' must be a list or tuple. Got {type(value).__name__}: {value!r}.")
