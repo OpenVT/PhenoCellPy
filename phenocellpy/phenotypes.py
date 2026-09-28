@@ -142,6 +142,10 @@ class Phenotype:
         elif not isinstance(config, PhenotypeConfig):
             raise TypeError(f"`config` must be a PhenotypeConfig. Got {type(config).__name__}.")
 
+        # assignments only run the single-field checks, the config (or its phases) might have changed since it was
+        # built
+        config.validate()
+
         if self.phase_classes and len(config.phases) != len(self.phase_classes):
             raise ValueError(f"{type(self).__name__} has {len(self.phase_classes)} phases, the config defines "
                              f"{len(config.phases)}.")

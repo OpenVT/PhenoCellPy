@@ -129,6 +129,9 @@ class Phase:
         else:
             config = config.fill_none_from(defaults)
 
+        # assignments only run the single-field checks, the functions might have changed since the config was built
+        config.functions.validate()
+
         self.config = config
 
         self.index = config.index
