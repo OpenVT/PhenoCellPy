@@ -37,6 +37,7 @@ from os.path import abspath
 import time
 
 import phenocellpy as pcp
+from phenocellpy.types import PhenotypeConfig, PhaseConfig, TimingConfig, VolumeConfig, FunctionsConfig
 
 
 def get_radius_sphere(volume):
@@ -65,20 +66,9 @@ density = mass / ((4 / 3) * np.pi * radius * radius * radius)
 
 dt = .1  # min/time step
 
-stable_phase_0 = pcp.phases.Phase(index=0, previous_phase_index=-1, next_phase_index=1, dt=dt,
-                                  time_unit="min", space_unit="micrometer", name="stable0",
-                                  division_at_phase_exit=False, removal_at_phase_exit=False, fixed_duration=True,
-                                  phase_duration=10, entry_function=None, exit_function=None, arrest_function=None,
-                                  check_transition_to_next_phase_function=None,
-                                  simulated_cell_volume=np.pi * (4 / 3) * radius * radius * radius,
-                                  cytoplasm_volume_change_rate=None, nuclear_volume_change_rate=None,
-                                  calcification_rate=None, target_fluid_fraction=None, nuclear_fluid=None,
-                                  nuclear_solid=None, nuclear_solid_target=None, cytoplasm_fluid=None,
-                                  cytoplasm_solid=None, cytoplasm_solid_target=None,
-                                  target_cytoplasm_to_nuclear_ratio=None, calcified_fraction=None,
-                                  fluid_change_rate=None, relative_rupture_volume=None,
-                                  user_phase_time_step=None, user_phase_time_step_args=(None,))
-
+stable_phase_0 = PhaseConfig(index=0, previous_phase_index=-1, next_phase_index=1, name="stable0",
+                             timing=TimingConfig(phase_duration=10, fixed_duration=True),
+                             volume=VolumeConfig(simulated_cell_volume=np.pi * (4 / 3) * radius * radius * radius))
 
 def grow_phase_transition(*args):
     volume = args[0]
@@ -88,36 +78,16 @@ def grow_phase_transition(*args):
     return volume >= doubling_volume and time_phase > phase_duration
 
 
-grow_phase = pcp.phases.Ki67Positive(index=1, previous_phase_index=0, next_phase_index=2, dt=dt,
-                                     time_unit="min", space_unit="micrometer", name="grow",
-                                     division_at_phase_exit=False, removal_at_phase_exit=False, fixed_duration=True,
-                                     phase_duration=50, entry_function=None,
-                                     entry_function_args=[None],
-                                     exit_function=False, arrest_function=None,
-                                     check_transition_to_next_phase_function=grow_phase_transition,
-                                     check_transition_to_next_phase_function_args=[0, 9, 0, 9],
-                                     simulated_cell_volume=1,
-                                     cytoplasm_volume_change_rate=None, nuclear_volume_change_rate=None,
-                                     calcification_rate=None, target_fluid_fraction=None, nuclear_fluid=None,
-                                     nuclear_solid=None, nuclear_solid_target=None, cytoplasm_fluid=None,
-                                     cytoplasm_solid=None, cytoplasm_solid_target=None,
-                                     target_cytoplasm_to_nuclear_ratio=None, calcified_fraction=None,
-                                     fluid_change_rate=None, relative_rupture_volume=None,
-                                     user_phase_time_step=None, user_phase_time_step_args=(None,))
+grow_phase = PhaseConfig(index=1, previous_phase_index=0, next_phase_index=2, name="grow", kind="Ki67Positive",
+                         timing=TimingConfig(phase_duration=50, fixed_duration=True),
+                         volume=VolumeConfig(simulated_cell_volume=1),
+                         functions=FunctionsConfig(entry_function_args=[None], exit_function=False,
+                                                   check_transition_to_next_phase_function=grow_phase_transition,
+                                                   check_transition_to_next_phase_function_args=[0, 9, 0, 9]))
 
-stable_phase_1 = pcp.phases.Phase(index=2, previous_phase_index=1, next_phase_index=3, dt=dt,
-                                  time_unit="min", space_unit="micrometer", name="stable1",
-                                  division_at_phase_exit=False, removal_at_phase_exit=False, fixed_duration=True,
-                                  phase_duration=5, entry_function=None, exit_function=None, arrest_function=None,
-                                  check_transition_to_next_phase_function=None,
-                                  simulated_cell_volume=np.pi * (4 / 3) * radius * radius * radius,
-                                  cytoplasm_volume_change_rate=None, nuclear_volume_change_rate=None,
-                                  calcification_rate=None, target_fluid_fraction=None, nuclear_fluid=None,
-                                  nuclear_solid=None, nuclear_solid_target=None, cytoplasm_fluid=None,
-                                  cytoplasm_solid=None, cytoplasm_solid_target=None,
-                                  target_cytoplasm_to_nuclear_ratio=None, calcified_fraction=None,
-                                  fluid_change_rate=None, relative_rupture_volume=None,
-                                  user_phase_time_step=None, user_phase_time_step_args=(None,))
+stable_phase_1 = PhaseConfig(index=2, previous_phase_index=1, next_phase_index=3, name="stable1",
+                             timing=TimingConfig(phase_duration=5, fixed_duration=True),
+                             volume=VolumeConfig(simulated_cell_volume=np.pi * (4 / 3) * radius * radius * radius))
 
 
 def shrink_phase_transition(*args):
@@ -131,30 +101,20 @@ def shrink_phase_transition(*args):
     return time_check and volume_check
 
 
-shrink_phase = pcp.phases.Ki67PositivePostMitotic(index=3, previous_phase_index=2, next_phase_index=0, dt=dt,
-                                                  time_unit="min", space_unit="micrometer", name="shrink",
-                                                  division_at_phase_exit=False, removal_at_phase_exit=False,
-                                                  fixed_duration=False,
-                                                  phase_duration=100, entry_function=None,
-                                                  entry_function_args=[None], exit_function=None,
-                                                  arrest_function=None,
-                                                  check_transition_to_next_phase_function=shrink_phase_transition,
-                                                  check_transition_to_next_phase_function_args=[0, 1, 99, 0],
-                                                  simulated_cell_volume=1,
-                                                  cytoplasm_volume_change_rate=None, nuclear_volume_change_rate=None,
-                                                  calcification_rate=None, target_fluid_fraction=None,
-                                                  nuclear_fluid=None,
-                                                  nuclear_solid=None, nuclear_solid_target=None, cytoplasm_fluid=None,
-                                                  cytoplasm_solid=None, cytoplasm_solid_target=None,
-                                                  target_cytoplasm_to_nuclear_ratio=None, calcified_fraction=None,
-                                                  fluid_change_rate=None, relative_rupture_volume=None,
-                                                  user_phase_time_step=None, user_phase_time_step_args=(None,))
+shrink_phase = PhaseConfig(index=3, previous_phase_index=2, next_phase_index=0, name="shrink",
+                           kind="Ki67PositivePostMitotic",
+                           timing=TimingConfig(phase_duration=100, fixed_duration=False),
+                           volume=VolumeConfig(simulated_cell_volume=1),
+                           functions=FunctionsConfig(entry_function_args=[None],
+                                                     check_transition_to_next_phase_function=shrink_phase_transition,
+                                                     check_transition_to_next_phase_function_args=[0, 1, 99, 0]))
 
-custom_pheno = pcp.phenotypes.Phenotype(name="oscillate volume with rests", dt=dt, time_unit="min",
-                                        space_unit="micrometer", phases=[stable_phase_0, grow_phase, stable_phase_1,
-                                                                           shrink_phase],
-                                        senescent_phase=False, starting_phase_index=0, user_phenotype_time_step=None,
-                                        user_phenotype_time_step_args=[None, ])
+custom_pheno = pcp.phenotypes.Phenotype(PhenotypeConfig(name="oscillate volume with rests", dt=dt, time_unit="min",
+                                                        space_unit="micrometer",
+                                                        phases=(stable_phase_0, grow_phase, stable_phase_1,
+                                                                shrink_phase),
+                                                        senescent_phase=False, starting_phase_index=0,
+                                                        user_phenotype_time_step_args=[None, ]))
 
 global volume_conversion_unit
 volume_conversion_unit = mass / custom_pheno.current_phase.volume.total

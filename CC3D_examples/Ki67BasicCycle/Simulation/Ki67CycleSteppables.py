@@ -65,9 +65,13 @@ class ConstraintInitializerSteppable(SteppableBasePy):
 
         dt = 5  # 5 min/mcs
 
-        ki67_basic = pcp.phenotypes.Ki67Basic(dt=dt, nuclear_volume_change_rate=[None,0.0055], 
-                                                                  cytoplasm_volume_change_rate=[None,0.0045],
-                                                                  fluid_change_rate=[None,0.05])
+        ki67_basic_config = pcp.phenotypes.Ki67Basic.default_config()
+        ki67_basic_config.dt = dt
+        ki67_positive = ki67_basic_config.phases[1]
+        ki67_positive.volume.rates.nuclear_volume_change_rate = 0.0055
+        ki67_positive.volume.rates.cytoplasm_volume_change_rate = 0.0045
+        ki67_positive.volume.rates.fluid_change_rate = 0.05
+        ki67_basic = pcp.phenotypes.Ki67Basic(ki67_basic_config)
 
         self.volume_conversion_unit = self.target_volume / ki67_basic.current_phase.volume.total
 

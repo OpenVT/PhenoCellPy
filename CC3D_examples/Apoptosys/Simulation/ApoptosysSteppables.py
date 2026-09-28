@@ -56,7 +56,10 @@ class ApoptosysSteppable(SteppableBasePy):
 
         self.target_volume = self.side * self.side
 
-        self.apopto = pcp.phenotypes.ApoptosisStandard(dt=self.dt)
+        apopto_config = pcp.phenotypes.ApoptosisStandard.default_config()
+        apopto_config.dt = self.dt
+
+        self.apopto = pcp.phenotypes.ApoptosisStandard(apopto_config)
 
         self.volume_conversion_unit = self.target_volume / self.apopto.current_phase.volume.total
 

@@ -70,21 +70,20 @@ class ConstraintInitializerSteppable(SteppableBasePy):
         self.cell_field[x:x + side, y:y + side, z:z + side] = cell
 
         dt = 5  # 5 min/mcs
-        #ki67_basic_modified_transition = pcp.phenotypes.Ki67Basic(dt=dt,
-        #                                                          check_transition_to_next_phase_functions=[None,
-        #                                                                                                      Ki67pos_transition],
-        #                                                          check_transition_to_next_phase_functions_args=[None,
-        #                                                                                                           [-9, 1, -9, 1]])
+        ki67_basic_config = pcp.phenotypes.Ki67Basic.default_config()
+        ki67_basic_config.dt = dt
+        ki67_positive = ki67_basic_config.phases[1]
+        #ki67_positive.functions.check_transition_to_next_phase_function = Ki67pos_transition
+        #ki67_positive.functions.check_transition_to_next_phase_function_args = [-9, 1, -9, 1]
 
         #notes on the below modification, right now fluid_change_rate may not be doing anything (always overwrites with 1 or the previous derived
         #value). Likely the change rates can be applied to all phases, though it will not change anything.
-        ki67_basic_modified_transition = pcp.phenotypes.Ki67Basic(dt=dt, nuclear_volume_change_rate=[None,0.0055],
-                                                                  cytoplasm_volume_change_rate=[None,0.0045],
-                                                                  fluid_change_rate=[None,0.05],
-                                                                  check_transition_to_next_phase_functions=[None,
-                                                                                                              Ki67pos_transition],
-                                                                  check_transition_to_next_phase_functions_args=[None,
-                                                                                                                   [-9, 1, -9, 1]])
+        ki67_positive.volume.rates.nuclear_volume_change_rate = 0.0055
+        ki67_positive.volume.rates.cytoplasm_volume_change_rate = 0.0045
+        ki67_positive.volume.rates.fluid_change_rate = 0.05
+        ki67_positive.functions.check_transition_to_next_phase_function = Ki67pos_transition
+        ki67_positive.functions.check_transition_to_next_phase_function_args = [-9, 1, -9, 1]
+        ki67_basic_modified_transition = pcp.phenotypes.Ki67Basic(ki67_basic_config)
 #second arg makes sure volume is made before progression - with small lambda and large steps divergence is observed. Possible to
 #have phenocell read volume so these arguments dont need to be passed? Check issues on Github to make sure it makes sense!
         self.volume_conversion_unit = self.target_volume / ki67_basic_modified_transition.current_phase.volume.total
