@@ -3,16 +3,21 @@ from dataclasses import fields, replace
 
 class Validated:
     """
-    Mixin for the config dataclasses. On construction it runs the single-field checks declared in each field's
-    ``metadata["checks"]``, then calls :meth:`validate` for checks that need more than one field.
+    Mixin for the config dataclasses. Every assignment to a field, including the ones done by the generated
+    ``__init__``, runs the single-field checks declared in the field's ``metadata["checks"]``. After construction,
+    :meth:`validate` runs the checks that need more than one field.
 
-    Subclasses override :meth:`validate`, never ``__post_init__``, so the field checks always run.
+    Subclasses override :meth:`validate`, never ``__post_init__``, so the cross-field checks always run.
     """
 
+    def __setattr__(self, name, value):
+        field = self.__dataclass_fields__.get(name)
+        if field is not None:
+            for check in field.metadata.get("checks", ()):
+                check(name, value)
+        super().__setattr__(name, value)
+
     def __post_init__(self):
-        for f in fields(self):
-            for check in f.metadata.get("checks", ()):
-                check(f.name, getattr(self, f.name))
         self.validate()
 
     def validate(self):
