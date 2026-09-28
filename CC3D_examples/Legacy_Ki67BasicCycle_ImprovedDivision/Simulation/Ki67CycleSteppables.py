@@ -1,0 +1,349 @@
+"""
+BSD 3-Clause License
+
+Copyright (c) 2023, Juliano Ferrari Gianlupi
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+from cc3d.cpp.PlayerPython import *
+from cc3d import CompuCellSetup
+
+from cc3d.core.PySteppables import *
+
+from numpy import median, quantile, nan
+
+from os.path import abspath, dirname, join
+
+import phenocellpy as pcp
+
+
+def Ki67pos_transition(*args):
+    # print(len(args), print(args))
+    # args = [cc3d cell volume, phase's target volume, time in phase, phase duration
+    return args[0] >= args[1] and args[2] > args[3]
+
+
+class ConstraintInitializerSteppable(SteppableBasePy):
+    def __init__(self, frequency=1):
+        SteppableBasePy.__init__(self, frequency)
+        self.track_cell_level_scalar_attribute(field_name='phase_index_plus_1', attribute_name='phase_index_plus_1')
+        self.target_volume = None
+        self.doubling_volume = None
+        self.volume_conversion_unit = None
+
+    def start(self):
+        side = 10
+
+        self.target_volume = side * side
+        self.doubling_volume = 2 * self.target_volume
+
+        x = self.dim.x // 2 - side // 2
+        y = self.dim.x // 2 - side // 2
+
+        cell = self.new_cell(self.CELL)
+        self.cell_field[x:x + side, y:y + side, 0] = cell
+
+        dt = 1  # 5 min/mcs
+        # this example builds the phenotype with the legacy-compatible builders, which take the arguments of the old
+        # (pre-config) constructors. The phases take the arguments the old Ki67Basic constructor gave them
+        ki67_negative = pcp.utils.build_phase_config_legacy(index=0, previous_phase_index=1, next_phase_index=1, dt=dt,
+                                                            name="Ki 67-", division_at_phase_exit=False,
+                                                            removal_at_phase_exit=False, fixed_duration=False,
+                                                            phase_duration=4.59 * 60, calcified_fraction=0)
+
+        #ki67_positive = pcp.utils.build_phase_config_legacy(index=1, previous_phase_index=0, next_phase_index=0, dt=dt,
+        #                                                    name="Ki 67+", division_at_phase_exit=True,
+        #                                                    removal_at_phase_exit=False, fixed_duration=True,
+        #                                                    phase_duration=15.5 * 60, calcified_fraction=0,
+        #                                                    check_transition_to_next_phase_function=Ki67pos_transition,
+        #                                                    check_transition_to_next_phase_function_args=[-9, 1, -9, 1])
+        
+        #notes on the below modification, right now fluid_change_rate may not be doing anything (always overwrites with 1 or the previous derived
+        #value). Likely the change rates can be applied to all phases, though it will not change anything.
+        ki67_positive = pcp.utils.build_phase_config_legacy(index=1, previous_phase_index=0, next_phase_index=0, dt=dt,
+                                                            name="Ki 67+", division_at_phase_exit=True,
+                                                            removal_at_phase_exit=False, fixed_duration=True,
+                                                            phase_duration=15.5 * 60, calcified_fraction=0,
+                                                            nuclear_volume_change_rate=0.0055,
+                                                            cytoplasm_volume_change_rate=0.0045,
+                                                            fluid_change_rate=0.05,
+                                                            check_transition_to_next_phase_function=Ki67pos_transition,
+                                                            check_transition_to_next_phase_function_args=[-9, 1, -9, 1])
+
+        ki67_basic_modified_transition = pcp.phenotypes.Ki67Basic(
+            pcp.utils.build_phenotype_config_legacy(name="Ki67 Basic", dt=dt, senescent_phase=False,
+                                                    phases=[ki67_negative, ki67_positive]))
+#second arg makes sure volume is made before progression - with small lambda and large steps divergence is observed. Possible to 
+#have phenocell read volume so these arguments dont need to be passed? Check issues on Github to make sure it makes sense!
+        self.volume_conversion_unit = self.target_volume / ki67_basic_modified_transition.current_phase.volume.total
+
+        for cell in self.cell_list:
+            cell.targetVolume = self.target_volume
+            cell.lambdaVolume = 20.0
+            pcp.utils.add_phenotype_to_CC3D_cell(cell, ki67_basic_modified_transition)
+            cell.dict["phase_index_plus_1"] = cell.dict["phenotype"].current_phase.index + 1
+
+        self.shared_steppable_vars["constraints"] = self
+
+
+class MitosisSteppable(MitosisSteppableBase):
+    def __init__(self, frequency=1):
+        MitosisSteppableBase.__init__(self, frequency)
+
+        self.constraint_vars = None
+
+        self.previous_number_cells = 0
+
+        self.plot = True
+        self.save = False
+
+        if self.save:
+            self.save_loc = dirname(abspath(__file__))
+
+            self.volume_file = open(join(self.save_loc, "volume.dat"), "w+")
+            self.volume_file.write("MCS, Median, Min, Max, 10th, 90th, 25th, 75th\n")
+
+            self.time_minus_file = open(join(self.save_loc, "time_in_Ki67-.dat"), "w+")
+            self.time_minus_file.write("MCS, Median, Min, Max, 10th, 90th, 25th, 75th\n")
+
+            self.time_plus_file = open(join(self.save_loc, "time_in_Ki67+.dat"), "w+")
+            self.time_plus_file.write("MCS, Median, Min, Max, 10th, 90th, 25th, 75th\n")
+
+            self.number_cells_file = open(join(self.save_loc, "number_cells.dat"), "w+")
+            self.number_cells_file.write("MCS, N, N+, N-\n")
+
+    def start(self):
+        self.constraint_vars = self.shared_steppable_vars["constraints"]
+        if self.plot:
+            self.plot_win_vol = self.add_new_plot_window(title='Volume metrics',
+                                                         x_axis_title='MonteCarlo Step (MCS)',
+                                                         y_axis_title='Variables', x_scale_type='linear',
+                                                         y_scale_type='linear',
+                                                         grid=True,
+                                                         config_options={"legend": True})
+
+            self.plot_win_vol.add_plot("Median Vol", style='Lines', color='yellow', size=5)
+            self.plot_win_vol.add_plot("Minimum Vol", style='Lines', color='blue', size=5)
+            self.plot_win_vol.add_plot("Maximum Vol", style='Lines', color='red', size=5)
+
+            self.plot_win_time = self.add_new_plot_window(title='Time spent in each phase',
+                                                          x_axis_title='MonteCarlo Step (MCS)',
+                                                          y_axis_title='Variables', x_scale_type='linear',
+                                                          y_scale_type='linear',
+                                                          grid=True,
+                                                          config_options={"legend": True})
+
+            self.plot_win_time.add_plot("Median Time in Ki67-", style='Lines', color='yellow', size=5)
+            self.plot_win_time.add_plot("Median Time in Ki67+", style='Lines', color='blue', size=5)
+            self.plot_win_time.add_plot("Maximum Time in Ki67+", style='Lines', color='red', size=5)
+
+            self.plot_win_number = self.add_new_plot_window(title='Number of cells',
+                                                            x_axis_title='MonteCarlo Step (MCS)',
+                                                            y_axis_title='Variables', x_scale_type='linear',
+                                                            y_scale_type='linear',
+                                                            grid=True)
+            self.plot_win_number.add_plot("N", style='Lines', color='red', size=5)
+
+            self.plot_win_phase = self.add_new_plot_window(title='Number of cells in each phase',
+                                                           x_axis_title='MonteCarlo Step (MCS)',
+                                                           y_axis_title='Variables', x_scale_type='linear',
+                                                           y_scale_type='linear',
+                                                           grid=True)
+
+            self.plot_win_phase.add_plot("N", style='Points', color='red', size=20)
+
+    def step(self, mcs):
+
+        if not mcs and self.plot:
+            self.plot_win_number.add_data_point("N", mcs, len(self.cell_list))
+            self.previous_number_cells = len(self.cell_list)
+
+        elif not mcs % 50 and len(self.cell_list) - self.previous_number_cells > 0 and self.plot:
+            self.plot_win_number.add_data_point("N", mcs, len(self.cell_list))
+            self.previous_number_cells = len(self.cell_list)
+
+        cells_to_divide = []
+
+        n_zero = 0
+        n_one = 0
+
+        volumes = []
+        Targetvolumes = []
+
+        time_spent_in_0 = []
+        time_spent_in_1 = []
+
+        for cell in self.cell_list:
+            volumes.append(cell.volume)
+            #cell.dict["phenotype"].current_phase.simulated_cell_volume = cell.volume #This passes in, but is unused
+            # print(len(args))
+            if cell.dict["phenotype"].current_phase.index == 0:
+                n_zero += 1
+                time_spent_in_0.append(cell.dict["phenotype"].current_phase.time_in_phase)
+            elif cell.dict["phenotype"].current_phase.index == 1:
+                n_one += 1
+                time_spent_in_1.append(cell.dict["phenotype"].current_phase.time_in_phase)
+                # args = [cc3d cell volume, doubling colume, time in phase, phase duration]
+                args = [
+                    cell.volume,
+                    .9 * self.constraint_vars.doubling_volume,  # we use 90% of the doubling volume because cc3d cells
+                    # will always be slightly below their target due to the contact energy
+                    cell.dict["phenotype"].current_phase.time_in_phase + cell.dict["phenotype"].dt,
+                    cell.dict["phenotype"].current_phase.phase_duration]
+
+                cell.dict["phenotype"].current_phase.check_transition_to_next_phase_function_args = args
+
+            changed_phase, should_be_removed, divides = cell.dict["phenotype"].time_step_phenotype()
+
+            if changed_phase:
+                cell.dict["phase_index_plus_1"] = cell.dict["phenotype"].current_phase.index + 1
+                if len(self.cell_list) < 10:
+                    print("@@@\nPHASE CHANGE\n@@@")
+
+            if divides:
+                if len(self.cell_list) < 10:
+                    print(f"@@@\nCELL DIVISION\n@@@\ncell volume={cell.volume}")
+                cells_to_divide.append(cell)
+            converted_volume = self.constraint_vars.volume_conversion_unit * \
+                               cell.dict["phenotype"].current_phase.volume.total
+            cell.targetVolume = converted_volume
+            #Targetvolumes.append(cell.targetVolume)
+
+        if self.save or self.plot:
+            volume_median = median(volumes)
+            volume_min = min(volumes)
+            volume_max = max(volumes)
+            if len(time_spent_in_0):
+                in_0_median = median(time_spent_in_0)
+                in_0_min = min(time_spent_in_0)
+                in_0_max = max(time_spent_in_0)
+            else:
+                in_0_median = nan
+                in_0_min = nan
+                in_0_max = nan
+            if len(time_spent_in_1):
+                in_1_median = median(time_spent_in_1)
+                in_1_min = min(time_spent_in_1)
+                in_1_max = max(time_spent_in_1)
+            else:
+                in_1_median = nan
+                in_1_min = nan
+                in_1_max = nan
+
+            if self.save:
+                volume_10th = quantile(volumes, 0.1)
+                volume_90th = quantile(volumes, 0.9)
+                volume_25th = quantile(volumes, 0.25)
+                volume_75th = quantile(volumes, 0.75)
+
+                if len(time_spent_in_0):
+                    in_0_10th = quantile(time_spent_in_0, 0.1)
+                    in_0_90th = quantile(time_spent_in_0, 0.9)
+                    in_0_25th = quantile(time_spent_in_0, 0.25)
+                    in_0_75th = quantile(time_spent_in_0, 0.75)
+                else:
+                    in_0_10th = nan
+                    in_0_90th = nan
+                    in_0_25th = nan
+                    in_0_75th = nan
+
+                if len(time_spent_in_1):
+                    in_1_10th = quantile(time_spent_in_1, 0.1)
+                    in_1_90th = quantile(time_spent_in_1, 0.9)
+                    in_1_25th = quantile(time_spent_in_1, 0.25)
+                    in_1_75th = quantile(time_spent_in_1, 0.75)
+                else:
+                    in_1_10th = nan
+                    in_1_90th = nan
+                    in_1_25th = nan
+                    in_1_75th = nan
+
+                self.volume_file.write(f"{mcs}, {volume_median}, {volume_min}, {volume_max}, "
+                                       f"{volume_10th}, {volume_90th}, {volume_25th}, {volume_75th}\n")
+
+                self.time_minus_file.write(f"{mcs}, {in_0_median}, {in_0_min}, {in_0_max}, "
+                                           f"{in_0_10th}, {in_0_90th}, {in_0_25th}, {in_0_75th}\n")
+                self.time_plus_file.write(f"{mcs}, {in_1_median}, {in_1_min}, {in_1_max}, "
+                                          f"{in_1_10th}, {in_1_90th}, {in_1_25th}, {in_1_75th}\n")
+
+                self.number_cells_file.write(f"{mcs}, {len(self.cell_list)}, {n_one}, {n_zero}\n")
+
+            if self.plot:
+                self.plot_win_phase.erase_all_data()
+                # arguments are (name of the data series, x, y)
+                self.plot_win_phase.add_data_point("N", 0, n_zero)
+                self.plot_win_phase.add_data_point("N", 1, n_one)
+
+                if not mcs % 50:
+                    self.plot_win_vol.add_data_point("Median Vol", mcs, volume_median)
+                    self.plot_win_vol.add_data_point("Maximum Vol", mcs, volume_max)
+                    self.plot_win_vol.add_data_point("Minimum Vol", mcs, volume_min)
+                    if len(time_spent_in_0):
+                        self.plot_win_time.add_data_point("Median Time in Ki67-", mcs, in_0_median)
+
+                    if len(time_spent_in_1):
+                        self.plot_win_time.add_data_point("Median Time in Ki67+", mcs, median(time_spent_in_1))
+                        self.plot_win_time.add_data_point("Maximum Time in Ki67+", mcs, max(time_spent_in_1))
+
+        for cell in cells_to_divide:
+            # self.divide_cell_random_orientation(cell)
+            # Other valid options
+            # self.divide_cell_orientation_vector_based(cell,1,1,0)
+            # self.divide_cell_along_major_axis(cell)
+            self.divide_cell_along_minor_axis(cell)
+
+    def update_attributes(self):
+        # resetting target volume
+        self.parent_cell.dict["phenotype"].current_phase.volume.nuclear_solid = self.parent_cell.dict["phenotype"].current_phase.volume.nuclear_solid / 2
+        self.parent_cell.dict["phenotype"].current_phase.volume.cytoplasm_solid = self.parent_cell.dict["phenotype"].current_phase.volume.cytoplasm_solid / 2
+        converted_volume = self.constraint_vars.volume_conversion_unit * \
+                           self.parent_cell.dict["phenotype"].current_phase.volume.total
+        self.parent_cell.targetVolume = converted_volume
+
+        self.clone_parent_2_child()
+        self.child_cell.dict["phenotype"] = self.parent_cell.dict["phenotype"].copy()
+        self.parent_cell.dict["phase_index_plus_1"] = self.parent_cell.dict["phenotype"].current_phase.index + 1
+
+        self.child_cell.dict["phase_index_plus_1"] = self.child_cell.dict["phenotype"].current_phase.index + 1
+        self.child_cell.dict["phenotype"].time_in_phenotype = 0
+        if len(self.cell_list) < 10:
+            print("@@@\nCHILD ATTRIBS\n@@@\n", self.child_cell.volume,
+                  self.child_cell.dict["phenotype"].time_in_phenotype,
+                  self.child_cell.dict["phenotype"].current_phase,
+                  self.child_cell.dict["phenotype"].current_phase.time_in_phase)
+
+    def on_stop(self):
+        self.finish()
+
+    def finish(self):
+
+        if self.save:
+            self.volume_file.close()
+            self.time_minus_file.close()
+            self.time_plus_file.close()
+            self.number_cells_file.close()
