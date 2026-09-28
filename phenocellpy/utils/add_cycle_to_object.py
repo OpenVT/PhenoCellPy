@@ -31,13 +31,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from .. import phenotypes
+from ..types import PhenotypeConfig
 
 
 # from .. import phenotypes
 
 
-def add_cycle_to_object(o: object, phenotype: str or phenotypes.Phenotype, name: str = "unnamed",
-                        dt: float = 1, time_unit: str = "min", phases: list = None, senescent_phase= None):
+def add_cycle_to_object(o: object, phenotype: str | phenotypes.Phenotype, config: PhenotypeConfig = None):
+    """
+    Attaches a phenotype to `o` as `o.phenotype`.
+
+    :param o: Object to attach the phenotype to. Must support custom attributes
+    :param phenotype: An initialized phenotype, or the name of a pre-defined phenotype (see `phenotypes.cycle_names`)
+    :type phenotype: str or phenotypes.Phenotype
+    :param config: Parameters for the pre-defined phenotype. If None, the phenotype's default config is used. Only
+        used if `phenotype` is a name
+    :type config: PhenotypeConfig
+    """
 
     if not hasattr(o, "__dict__"):
         raise AttributeError("phenotype class can only be attached to objects that support custom attributes. Object "
@@ -50,13 +60,22 @@ def add_cycle_to_object(o: object, phenotype: str or phenotypes.Phenotype, name:
 
     if type(phenotype) == str:
         phenotype = phenotypes.get_phenotype_by_name(phenotype)
-        phenotype = phenotype(name=name, dt=dt, time_unit=time_unit, phases=phases, senescent_phase=senescent_phase)
+        phenotype = phenotype(config)
 
     setattr(o, "phenotype", phenotype)
 
 
-def add_phenotype_to_CC3D_cell(cell, phenotype: str or phenotypes.Phenotype, name: str = "unnamed", dt: float = 1,
-                               time_unit: str = "min", phases: list = None, senescent_phase=None):
+def add_phenotype_to_CC3D_cell(cell, phenotype: str | phenotypes.Phenotype, config: PhenotypeConfig = None):
+    """
+    Attaches a copy of a phenotype to a CompuCell3D cell as `cell.dict["phenotype"]`.
+
+    :param cell: CompuCell3D cell
+    :param phenotype: An initialized phenotype, or the name of a pre-defined phenotype (see `phenotypes.cycle_names`)
+    :type phenotype: str or phenotypes.Phenotype
+    :param config: Parameters for the pre-defined phenotype. If None, the phenotype's default config is used. Only
+        used if `phenotype` is a name
+    :type config: PhenotypeConfig
+    """
 
     if not hasattr(cell, "dict"):
         raise AttributeError("phenotype class is currently attached to the cell dictionary (i.e., cell.dict), however"
@@ -69,7 +88,7 @@ def add_phenotype_to_CC3D_cell(cell, phenotype: str or phenotypes.Phenotype, nam
 
     if type(phenotype) == str:
         phenotype = phenotypes.get_phenotype_by_name(phenotype)
-        phenotype = phenotype(name=name, dt=dt, time_unit=time_unit, phases=phases, senescent_phase=senescent_phase)
+        phenotype = phenotype(config)
 
     cell.dict["phenotype"] = phenotype.copy()
 
