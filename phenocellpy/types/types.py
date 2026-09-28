@@ -5,7 +5,6 @@ from phenocellpy.types.base import Validated
 from phenocellpy.types.validators import (not_none, positive, non_negative, fraction, boolean, integer,
                                           non_empty_str, function, function_or_false, sequence)
 
-# Configs are frozen: checks only run at construction, so allowing `cfg.dt = -1` afterwards would bypass them.
 # Runtime state (time in phase, current volumes, ...) belongs to the Phase/Phenotype objects, not to these configs.
 #
 # Time-related values (`phase_duration`) are in the units of the owning PhenotypeConfig's `time_unit`. `dt` only
@@ -16,7 +15,7 @@ from phenocellpy.types.validators import (not_none, positive, non_negative, frac
 # class or :class:`CellVolumes` computes its own default.
 
 
-@dataclass(frozen=True)
+@dataclass()
 class VolumeRatesConfig(Validated):
     """
     Volume change rates of a phase, in 1/`time_unit`. Used by the `CellVolume` model.
@@ -36,7 +35,7 @@ class VolumeRatesConfig(Validated):
         cls._reject_unknown_keys(data)
         return cls(**data)
 
-@dataclass(frozen=True)
+@dataclass()
 class VolumeConfig(Validated):
     """
     Volume parameters of a phase. `None` means "use the :class:`CellVolumes` default".
@@ -78,7 +77,7 @@ class VolumeConfig(Validated):
         return cls(**{**data, "rates": VolumeRatesConfig.from_dict(data.get("rates", {}))})
 
 
-@dataclass(frozen=True)
+@dataclass()
 class TimingConfig(Validated):
     """
     :param phase_duration: Expected duration of the phase, in units of the phenotype's `time_unit`. In the case of
@@ -96,7 +95,7 @@ class TimingConfig(Validated):
         return cls(**data)
 
 
-@dataclass(frozen=True)
+@dataclass()
 class EventConfig(Validated):
     """
     :param division_at_phase_exit: If the simulated cell should divide when leaving this phase
@@ -112,7 +111,7 @@ class EventConfig(Validated):
         return cls(**data)
 
 
-@dataclass(frozen=True)
+@dataclass()
 class FunctionsConfig(Validated):
     """
     User-defined functions of a phase and their arguments. All functions must be *args functions. For the entry,
@@ -155,7 +154,7 @@ class FunctionsConfig(Validated):
         return cls(**data)
 
 
-@dataclass(frozen=True)
+@dataclass()
 class PhaseConfig(Validated):
     """
     :param name: Descriptive name of the phase (e.g., S, G, M, necrotic swelling)
@@ -194,7 +193,7 @@ class PhaseConfig(Validated):
         return cls(**kwargs)
 
 
-@dataclass(frozen=True)
+@dataclass()
 class PhenotypeConfig(Validated):
     """
     :param name: Name for the phenotype
@@ -229,8 +228,7 @@ class PhenotypeConfig(Validated):
     user_phenotype_time_step_args: list | tuple | None = field(default=(None,), metadata={"checks": (sequence,)})
 
     def validate(self):
-        # frozen, so bypass __setattr__. A tuple keeps the phase list itself immutable too
-        object.__setattr__(self, "phases", tuple(self.phases))
+        self.phases = tuple(self.phases)
 
         if not self.phases:
             raise ValueError(f"Phenotype '{self.name}' needs at least one phase.")
