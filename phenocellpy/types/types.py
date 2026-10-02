@@ -5,6 +5,8 @@ from phenocellpy.types.base import Validated
 from phenocellpy.types.validators import (not_none, positive, non_negative, fraction, boolean, integer,
                                           non_empty_str, function, function_or_false, sequence)
 
+from typing import Union
+
 # Runtime state (time in phase, current volumes, ...) belongs to the Phase/Phenotype objects, not to these configs.
 #
 # Time-related values (`phase_duration`) are in the units of the owning PhenotypeConfig's `time_unit`. `dt` only
@@ -25,10 +27,10 @@ class VolumeRatesConfig(Validated):
     :param fluid_change_rate: Rate of change of the cell fluid part. `>= 0`
     :param calcification_rate: Rate of calcification of the cell. `>= 0`
     """
-    cytoplasm_volume_change_rate: float | None = field(default=None, metadata={"checks": (non_negative,)})
-    nuclear_volume_change_rate: float | None = field(default=None, metadata={"checks": (non_negative,)})
-    fluid_change_rate: float | None = field(default=None, metadata={"checks": (non_negative,)})
-    calcification_rate: float | None = field(default=None, metadata={"checks": (non_negative,)})
+    cytoplasm_volume_change_rate: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
+    nuclear_volume_change_rate: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
+    fluid_change_rate: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
+    calcification_rate: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -54,17 +56,17 @@ class VolumeConfig(Validated):
     :param simulated_cell_volume: Volume of the simulated cell (e.g., a CompuCell3D or Tissue Forge cell). `> 0`
     :param rates: Volume change rates
     """
-    target_fluid_fraction: float | None = field(default=None, metadata={"checks": (fraction,)})
-    nuclear_solid_target: float | None = field(default=None, metadata={"checks": (non_negative,)})
-    cytoplasm_solid_target: float | None = field(default=None, metadata={"checks": (non_negative,)})
-    relative_rupture_volume: float | None = field(default=None, metadata={"checks": (positive,)})
-    nuclear_fluid: float | None = field(default=None, metadata={"checks": (non_negative,)})
-    nuclear_solid: float | None = field(default=None, metadata={"checks": (non_negative,)})
-    cytoplasm_fluid: float | None = field(default=None, metadata={"checks": (non_negative,)})
-    cytoplasm_solid: float | None = field(default=None, metadata={"checks": (non_negative,)})
-    target_cytoplasm_to_nuclear_ratio: float | None = field(default=None, metadata={"checks": (non_negative,)})
-    calcified_fraction: float | None = field(default=None, metadata={"checks": (fraction,)})
-    simulated_cell_volume: float | None = field(default=None, metadata={"checks": (positive,)})
+    target_fluid_fraction: Union[float, None] = field(default=None, metadata={"checks": (fraction,)})
+    nuclear_solid_target: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
+    cytoplasm_solid_target: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
+    relative_rupture_volume: Union[float, None] = field(default=None, metadata={"checks": (positive,)})
+    nuclear_fluid: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
+    nuclear_solid: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
+    cytoplasm_fluid: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
+    cytoplasm_solid: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
+    target_cytoplasm_to_nuclear_ratio: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
+    calcified_fraction: Union[float, None] = field(default=None, metadata={"checks": (fraction,)})
+    simulated_cell_volume: Union[float, None] = field(default=None, metadata={"checks": (positive,)})
     rates: VolumeRatesConfig = field(default_factory=VolumeRatesConfig)
 
     def validate(self):
@@ -86,7 +88,7 @@ class TimingConfig(Validated):
     :param fixed_duration: Sets the transition from this phase to the next to be deterministic (True) or stochastic
         (False)
     """
-    phase_duration: float | None = field(default=10.0, metadata={"checks": (positive,)})
+    phase_duration: Union[float, None] = field(default=10.0, metadata={"checks": (positive,)})
     fixed_duration: bool = field(default=False, metadata={"checks": (not_none, boolean)})
 
     @classmethod
@@ -131,16 +133,16 @@ class FunctionsConfig(Validated):
     :param *_args: Args (list or tuple) for the function of the same name. Required if the function is defined
     """
     entry_function: object = field(default=None, metadata={"checks": (function_or_false,)})
-    entry_function_args: list | tuple | None = field(default=None, metadata={"checks": (sequence,)})
+    entry_function_args: Union[list, tuple, None] = field(default=None, metadata={"checks": (sequence,)})
     exit_function: object = field(default=None, metadata={"checks": (function_or_false,)})
-    exit_function_args: list | tuple | None = field(default=None, metadata={"checks": (sequence,)})
+    exit_function_args: Union[list, tuple, None] = field(default=None, metadata={"checks": (sequence,)})
     arrest_function: object = field(default=None, metadata={"checks": (function_or_false,)})
-    arrest_function_args: list | tuple | None = field(default=None, metadata={"checks": (sequence,)})
+    arrest_function_args: Union[list, tuple, None] = field(default=None, metadata={"checks": (sequence,)})
     check_transition_to_next_phase_function: object = field(default=None, metadata={"checks": (function_or_false,)})
-    check_transition_to_next_phase_function_args: list | tuple | None = field(default=None,
+    check_transition_to_next_phase_function_args: Union[list, tuple, None] = field(default=None,
                                                                              metadata={"checks": (sequence,)})
     user_phase_time_step: object = field(default=None, metadata={"checks": (function,)})
-    user_phase_time_step_args: list | tuple | None = field(default=None, metadata={"checks": (sequence,)})
+    user_phase_time_step_args: Union[list, tuple, None] = field(default=None, metadata={"checks": (sequence,)})
 
     def validate(self):
         for name in ("entry_function", "exit_function", "arrest_function", "check_transition_to_next_phase_function",
@@ -166,9 +168,9 @@ class PhaseConfig(Validated):
     """
     name: str = field(default="unnamed", metadata={"checks": (not_none, non_empty_str)})
     index: int = field(default=0, metadata={"checks": (not_none, integer, non_negative)})
-    kind: str | None = field(default=None, metadata={"checks": (non_empty_str,)})
-    previous_phase_index: int | None = field(default=None, metadata={"checks": (integer,)})
-    next_phase_index: int | None = field(default=None, metadata={"checks": (integer,)})
+    kind: Union[str, None] = field(default=None, metadata={"checks": (non_empty_str,)})
+    previous_phase_index: Union[int, None] = field(default=None, metadata={"checks": (integer,)})
+    next_phase_index: Union[int, None] = field(default=None, metadata={"checks": (integer,)})
 
     timing: TimingConfig = field(default_factory=TimingConfig)
     volume: VolumeConfig = field(default_factory=VolumeConfig)
@@ -222,10 +224,10 @@ class PhenotypeConfig(Validated):
     time_unit: str = field(default="min", metadata={"checks": (not_none, non_empty_str)})
     space_unit: str = field(default="micrometer", metadata={"checks": (not_none, non_empty_str)})
     phases: tuple[PhaseConfig, ...] = ()
-    senescent_phase: PhaseConfig | bool | None = None
-    starting_phase_index: int | None = field(default=0, metadata={"checks": (integer,)})
+    senescent_phase: Union[PhaseConfig, bool, None] = None
+    starting_phase_index: Union[int, None] = field(default=0, metadata={"checks": (integer,)})
     user_phenotype_time_step: object = field(default=None, metadata={"checks": (function,)})
-    user_phenotype_time_step_args: list | tuple | None = field(default=(None,), metadata={"checks": (sequence,)})
+    user_phenotype_time_step_args: Union[list, tuple, None] = field(default=(None,), metadata={"checks": (sequence,)})
 
     def validate(self):
         self.phases = tuple(self.phases)

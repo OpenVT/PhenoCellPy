@@ -32,12 +32,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from .. import phenotypes
 from ..types import PhenotypeConfig
+from typing import Union
 
 
 # from .. import phenotypes
 
 
-def add_cycle_to_object(o: object, phenotype: str | phenotypes.Phenotype, config: PhenotypeConfig = None):
+def add_cycle_to_object(o: object, phenotype: Union[str, phenotypes.Phenotype], config: PhenotypeConfig = None):
     """
     Attaches a phenotype to `o` as `o.phenotype`.
 
@@ -65,7 +66,7 @@ def add_cycle_to_object(o: object, phenotype: str | phenotypes.Phenotype, config
     setattr(o, "phenotype", phenotype)
 
 
-def add_phenotype_to_CC3D_cell(cell, phenotype: str | phenotypes.Phenotype, config: PhenotypeConfig = None):
+def add_phenotype_to_CC3D_cell(cell, phenotype: Union[str, phenotypes.Phenotype], config: PhenotypeConfig = None):
     """
     Attaches a copy of a phenotype to a CompuCell3D cell as `cell.dict["phenotype"]`.
 

@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from phenocellpy.types import (PhenotypeConfig, PhaseConfig, TimingConfig, VolumeConfig, VolumeRatesConfig,
                                EventConfig, FunctionsConfig)
-
+from typing import Union
 
 def build_cell_volumes_config_legacy(
         target_fluid_fraction=None,
@@ -171,7 +171,7 @@ def build_phenotype_config_legacy(
         time_unit: str = "min",
         space_unit="micrometer",
         phases: list = None,
-        senescent_phase: PhaseConfig | bool | None = None,
+        senescent_phase: Union[PhaseConfig, bool, None] = None,
         starting_phase_index: int = 0,
         user_phenotype_time_step=None,
         user_phenotype_time_step_args=(None,),
