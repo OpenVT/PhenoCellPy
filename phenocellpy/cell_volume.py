@@ -33,6 +33,8 @@ from scipy.integrate import odeint
 from numpy import array
 from copy import deepcopy
 
+from phenocellpy.types import VolumeConfig
+
 class CellVolumes:
     """
     Cell volume class, evolves the cell volume and its subvolumes
@@ -100,38 +102,22 @@ class CellVolumes:
 
     """
 
-    def __init__(self, target_fluid_fraction=None, nuclear_fluid=None, nuclear_solid=None, nuclear_solid_target=None,
-                 cytoplasm_fluid=None, cytoplasm_solid=None, cytoplasm_solid_target=None,
-                 target_cytoplasm_to_nuclear_ratio=None, calcified_fraction=None, relative_rupture_volume=None,
-                 time_unit="min", space_unit="micrometer"):
+    def __init__(self, config: VolumeConfig = None, time_unit="min", space_unit="micrometer"):
         """
 
+        :param config: Volume parameters. Parameters left as None take the MCF-7 reference values below. The range
+            checks are done by :class:`VolumeConfig`
+        :type config: VolumeConfig
         :param time_unit:
         :type time_unit:
         :param space_unit:
         :type space_unit:
-        :param target_fluid_fraction: Fraction of the cell volume that should be liquid
-        :type target_fluid_fraction: float in [0, 1]
-        :param nuclear_fluid: How much of the nuclear volume is fluid
-        :type nuclear_fluid: float
-        :param nuclear_solid: How much of the nuclear volume is solid
-        :type nuclear_solid: float
-        :param nuclear_solid_target: How much of the nuclear volume should be solid
-        :type nuclear_solid_target: float
-        :param cytoplasm_fluid: How much of the cytoplasm volume is fluid
-        :type cytoplasm_fluid: float
-        :param cytoplasm_solid: How much of the cytoplasm volume is solid
-        :type cytoplasm_solid: float
-        :param cytoplasm_solid_target: How much of the cytoplasm volume should be solid
-        :type cytoplasm_solid_target: float
-        :param target_cytoplasm_to_nuclear_ratio: How big the ratio "cytoplasm volume / nuclear volume" should be
-        :type target_cytoplasm_to_nuclear_ratio: float
-        :param calcified_fraction: How much of the cell is calcified
-        :type calcified_fraction: float in range [0, 1]
-        :param relative_rupture_volume: Relative volume at which the cell should burst, set at the start. To do anything
-        should be checked by Phase or Phenotype
-        :type relative_rupture_volume: float
         """
+        if config is None:
+            config = VolumeConfig()
+        elif not isinstance(config, VolumeConfig):
+            raise TypeError(f"`config` must be a VolumeConfig. Got {type(config).__name__}.")
+
         # The defaults values below are reference parameter values for MCF-7, in cubic
         # https://www.sciencedirect.com/topics/medicine-and-dentistry/mcf-7
         _total = 2494
@@ -152,66 +138,58 @@ class CellVolumes:
         self.time_unit = time_unit
         self.space_unit = space_unit
 
-        if target_fluid_fraction is None:
+        if config.target_fluid_fraction is None:
             self.target_fluid_fraction = _fluid_fraction
         else:
-            if not 0 <= target_fluid_fraction <= 1:
-                raise ValueError(f"`target_fluid_fraction` must be in range [0, 1]. Got {target_fluid_fraction}")
-            self.target_fluid_fraction = target_fluid_fraction
+            self.target_fluid_fraction = config.target_fluid_fraction
 
-        if nuclear_fluid is None:
+        if config.nuclear_fluid is None:
             self.nuclear_fluid = _nuclear * self.target_fluid_fraction
         else:
-            if nuclear_fluid < 0:
-                raise ValueError(f"`nuclear_fluid` must be >=0. Got {nuclear_fluid}")
-            self.nuclear_fluid = nuclear_fluid
+            self.nuclear_fluid = config.nuclear_fluid
 
-        if nuclear_solid is None:
+        if config.nuclear_solid is None:
             self.nuclear_solid = _nuclear * (1 - self.target_fluid_fraction)
         else:
-            if nuclear_solid < 0:
-                raise ValueError(f"`nuclear_solid` must be >=0. Got {nuclear_solid}")
-            self.nuclear_solid = nuclear_solid
+            self.nuclear_solid = config.nuclear_solid
 
-        if nuclear_solid_target is None:
+        if config.nuclear_solid_target is None:
             self.nuclear_solid_target = self.nuclear_solid
         else:
-            if nuclear_solid_target < 0:
-                raise ValueError(f"`nuclear_solid_target` must be >=0. Got {nuclear_solid_target}")
-            self.nuclear_solid_target = nuclear_solid_target
+            self.nuclear_solid_target = config.nuclear_solid_target
 
-        if cytoplasm_fluid is None:
+        if config.cytoplasm_fluid is None:
             self.cytoplasm_fluid = _cytoplasm * self.target_fluid_fraction
         else:
-            self.cytoplasm_fluid = cytoplasm_fluid
+            self.cytoplasm_fluid = config.cytoplasm_fluid
 
-        if cytoplasm_solid is None:
+        if config.cytoplasm_solid is None:
             self.cytoplasm_solid = _cytoplasm * (1 - self.target_fluid_fraction)
         else:
-            self.cytoplasm_solid = cytoplasm_solid
+            self.cytoplasm_solid = config.cytoplasm_solid
 
-        if cytoplasm_solid_target is None:
+        if config.cytoplasm_solid_target is None:
             self.cytoplasm_solid_target = self.cytoplasm_solid
         else:
-            self.cytoplasm_solid_target = cytoplasm_solid_target
+            self.cytoplasm_solid_target = config.cytoplasm_solid_target
 
         self.cytoplasm = self.cytoplasm_fluid + self.cytoplasm_solid
         self.nuclear = self.nuclear_fluid + self.nuclear_solid
 
-        if target_cytoplasm_to_nuclear_ratio is None:
+        if config.target_cytoplasm_to_nuclear_ratio is None:
             self.target_cytoplasm_to_nuclear_ratio = self.cytoplasm / (1e-16 + self.nuclear)
         else:
-            self.target_cytoplasm_to_nuclear_ratio = target_cytoplasm_to_nuclear_ratio
+            self.target_cytoplasm_to_nuclear_ratio = config.target_cytoplasm_to_nuclear_ratio
 
-        if calcified_fraction is None:
+        if config.calcified_fraction is None:
             self.calcified_fraction = _calcified_fraction
         else:
-            self.calcified_fraction = calcified_fraction
+            self.calcified_fraction = config.calcified_fraction
 
-        if relative_rupture_volume is None:
+        if config.relative_rupture_volume is None:
             self.relative_rupture_volume = _relative_rupture_volume
         else:
-            self.relative_rupture_volume = relative_rupture_volume
+            self.relative_rupture_volume = config.relative_rupture_volume
 
         self.fluid = self.cytoplasm_fluid + self.nuclear_fluid
 

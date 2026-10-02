@@ -59,32 +59,46 @@ class ConstraintInitializerSteppable(SteppableBasePy):
     def start(self):
         side = 10
 
-        self.target_volume = side * side * side
+        self.target_volume = side * side
         self.doubling_volume = 2 * self.target_volume
 
         x = self.dim.x // 2 - side // 2
         y = self.dim.x // 2 - side // 2
-        z = self.dim.z // 2 - side // 2
 
         cell = self.new_cell(self.CELL)
-        self.cell_field[x:x + side, y:y + side, z:z + side] = cell
+        self.cell_field[x:x + side, y:y + side, 0] = cell
 
-        dt = 5  # 5 min/mcs
-        ki67_basic_config = pcp.phenotypes.Ki67Basic.default_config()
-        ki67_basic_config.dt = dt
-        ki67_positive = ki67_basic_config.phases[1]
-        #ki67_positive.functions.check_transition_to_next_phase_function = Ki67pos_transition
-        #ki67_positive.functions.check_transition_to_next_phase_function_args = [-9, 1, -9, 1]
+        dt = 1  # 5 min/mcs
+        # this example builds the phenotype with the legacy-compatible builders, which take the arguments of the old
+        # (pre-config) constructors. The phases take the arguments the old Ki67Basic constructor gave them
+        ki67_negative = pcp.utils.build_phase_config_legacy(index=0, previous_phase_index=1, next_phase_index=1, dt=dt,
+                                                            name="Ki 67-", division_at_phase_exit=False,
+                                                            removal_at_phase_exit=False, fixed_duration=False,
+                                                            phase_duration=4.59 * 60, calcified_fraction=0)
 
+        #ki67_positive = pcp.utils.build_phase_config_legacy(index=1, previous_phase_index=0, next_phase_index=0, dt=dt,
+        #                                                    name="Ki 67+", division_at_phase_exit=True,
+        #                                                    removal_at_phase_exit=False, fixed_duration=True,
+        #                                                    phase_duration=15.5 * 60, calcified_fraction=0,
+        #                                                    check_transition_to_next_phase_function=Ki67pos_transition,
+        #                                                    check_transition_to_next_phase_function_args=[-9, 1, -9, 1])
+        
         #notes on the below modification, right now fluid_change_rate may not be doing anything (always overwrites with 1 or the previous derived
         #value). Likely the change rates can be applied to all phases, though it will not change anything.
-        ki67_positive.volume.rates.nuclear_volume_change_rate = 0.0055
-        ki67_positive.volume.rates.cytoplasm_volume_change_rate = 0.0045
-        ki67_positive.volume.rates.fluid_change_rate = 0.05
-        ki67_positive.functions.check_transition_to_next_phase_function = Ki67pos_transition
-        ki67_positive.functions.check_transition_to_next_phase_function_args = [-9, 1, -9, 1]
-        ki67_basic_modified_transition = pcp.phenotypes.Ki67Basic(ki67_basic_config)
-#second arg makes sure volume is made before progression - with small lambda and large steps divergence is observed. Possible to
+        ki67_positive = pcp.utils.build_phase_config_legacy(index=1, previous_phase_index=0, next_phase_index=0, dt=dt,
+                                                            name="Ki 67+", division_at_phase_exit=True,
+                                                            removal_at_phase_exit=False, fixed_duration=True,
+                                                            phase_duration=15.5 * 60, calcified_fraction=0,
+                                                            nuclear_volume_change_rate=0.0055,
+                                                            cytoplasm_volume_change_rate=0.0045,
+                                                            fluid_change_rate=0.05,
+                                                            check_transition_to_next_phase_function=Ki67pos_transition,
+                                                            check_transition_to_next_phase_function_args=[-9, 1, -9, 1])
+
+        ki67_basic_modified_transition = pcp.phenotypes.Ki67Basic(
+            pcp.utils.build_phenotype_config_legacy(name="Ki67 Basic", dt=dt, senescent_phase=False,
+                                                    phases=[ki67_negative, ki67_positive]))
+#second arg makes sure volume is made before progression - with small lambda and large steps divergence is observed. Possible to 
 #have phenocell read volume so these arguments dont need to be passed? Check issues on Github to make sure it makes sense!
         self.volume_conversion_unit = self.target_volume / ki67_basic_modified_transition.current_phase.volume.total
 
