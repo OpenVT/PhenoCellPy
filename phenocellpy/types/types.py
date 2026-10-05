@@ -82,14 +82,17 @@ class VolumeConfig(Validated):
 @dataclass()
 class TimingConfig(Validated):
     """
+    Timing parameters of a phase. `None` means "use the phase class' default".
+
     :param phase_duration: Expected duration of the phase, in units of the phenotype's `time_unit`. In the case of
-        the stochastic transition, the transition rate will be `dt/phase_duration`. `> 0`. `None` means "use the
-        phase class' default"
+        the stochastic transition, the transition rate will be `dt/phase_duration`. `> 0`
     :param fixed_duration: Sets the transition from this phase to the next to be deterministic (True) or stochastic
         (False)
     """
-    phase_duration: Union[float, None] = field(default=10.0, metadata={"checks": (positive,)})
-    fixed_duration: bool = field(default=False, metadata={"checks": (not_none, boolean)})
+    phase_duration: Union[float, None] = field(
+        default=None, metadata={"checks": (positive,)})
+    fixed_duration: Union[bool, None] = field(
+        default=None, metadata={"checks": (boolean,)})
 
     @classmethod
     def from_dict(cls, data: Dict):
@@ -100,12 +103,16 @@ class TimingConfig(Validated):
 @dataclass()
 class EventConfig(Validated):
     """
+    Events at the exit of a phase. `None` means "use the phase class' default".
+
     :param division_at_phase_exit: If the simulated cell should divide when leaving this phase
     :param removal_at_phase_exit: If the simulated cell should be removed (i.e., it dies, is killed, leaves the
         simulated domain) when leaving this phase
     """
-    division_at_phase_exit: bool = field(default=False, metadata={"checks": (not_none, boolean)})
-    removal_at_phase_exit: bool = field(default=False, metadata={"checks": (not_none, boolean)})
+    division_at_phase_exit: Union[bool, None] = field(
+        default=None, metadata={"checks": (boolean,)})
+    removal_at_phase_exit: Union[bool, None] = field(
+        default=None, metadata={"checks": (boolean,)})
 
     @classmethod
     def from_dict(cls, data: Dict):
@@ -159,14 +166,15 @@ class FunctionsConfig(Validated):
 @dataclass()
 class PhaseConfig(Validated):
     """
-    :param name: Descriptive name of the phase (e.g., S, G, M, necrotic swelling)
+    :param name: Descriptive name of the phase (e.g., S, G, M, necrotic swelling). `None` means "use the phase class'
+        default"
     :param index: Position of the phase in the phenotype's phase list. `>= 0`
     :param kind: Name of the :mod:`phenocellpy.phases` class to build this phase with (e.g., "Ki67Positive"). `None`
         means "the phenotype's class for this position" (:class:`Phases.Phase` for a generic :class:`Phenotype`)
     :param previous_phase_index: Index of the phase preceding this phase in the phenotype
     :param next_phase_index: Index of the phase the cycle goes to when this phase is exited
     """
-    name: str = field(default="unnamed", metadata={"checks": (not_none, non_empty_str)})
+    name: Union[str, None] = field(default=None, metadata={"checks": (non_empty_str,)})
     index: int = field(default=0, metadata={"checks": (not_none, integer, non_negative)})
     kind: Union[str, None] = field(default=None, metadata={"checks": (non_empty_str,)})
     previous_phase_index: Union[int, None] = field(default=None, metadata={"checks": (integer,)})
@@ -183,8 +191,12 @@ class PhaseConfig(Validated):
         for name, expected in self._groups.items():
             value = getattr(self, name)
             if not isinstance(value, expected):
-                raise TypeError(f"Phase '{self.name}': '{name}' must be a {expected.__name__}. "
+                raise TypeError(f"Phase {self._label()}: '{name}' must be a {expected.__name__}. "
                                 f"Got {type(value).__name__}.")
+
+    def _label(self):
+        """Identifies the phase in error messages. The name is only filled from the phase class when it is built."""
+        return f"'{self.name}'" if self.name is not None else f"with index {self.index}"
 
     @classmethod
     def from_dict(cls, data: Dict):
@@ -241,11 +253,13 @@ class PhenotypeConfig(Validated):
                                 f"Got {type(phase).__name__} at position {position}.")
             # the phase index is used to look up the phase in the phenotype's phase list
             if phase.index != position:
-                raise ValueError(f"Phenotype '{self.name}': phase '{phase.name}' is at position {position} but has "
-                                 f"index {phase.index}. Phase indices must match their position in `phases`.")
+                where = f"phase '{phase.name}' is at position {position} but has" if phase.name is not None else \
+                    f"the phase at position {position} has"
+                raise ValueError(f"Phenotype '{self.name}': {where} index {phase.index}. Phase indices must match their "
+                                 f"position in `phases`.")
             # same lookup when the phase is exited
             if phase.next_phase_index is None or not 0 <= phase.next_phase_index < len(self.phases):
-                raise ValueError(f"Phenotype '{self.name}': phase '{phase.name}' has `next_phase_index` "
+                raise ValueError(f"Phenotype '{self.name}': phase {phase._label()} has `next_phase_index` "
                                  f"{phase.next_phase_index}. It must be in [0, {len(self.phases) - 1}].")
 
         if isinstance(self.senescent_phase, PhaseConfig):

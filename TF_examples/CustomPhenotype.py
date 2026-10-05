@@ -37,7 +37,14 @@ from os.path import abspath
 import time
 
 import phenocellpy as pcp
-from phenocellpy.types import PhenotypeConfig, PhaseConfig, TimingConfig, VolumeConfig, FunctionsConfig
+from phenocellpy.types import (
+    PhenotypeConfig, 
+    PhaseConfig, 
+    TimingConfig, 
+    VolumeConfig, 
+    EventConfig,
+    FunctionsConfig,
+)
 
 
 def get_radius_sphere(volume):
@@ -80,6 +87,7 @@ def grow_phase_transition(*args):
 
 grow_phase = PhaseConfig(index=1, previous_phase_index=0, next_phase_index=2, name="grow", kind="Ki67Positive",
                          timing=TimingConfig(phase_duration=50, fixed_duration=True),
+                         events=EventConfig(division_at_phase_exit=False, removal_at_phase_exit=False),
                          volume=VolumeConfig(simulated_cell_volume=1),
                          functions=FunctionsConfig(entry_function_args=[None], exit_function=False,
                                                    check_transition_to_next_phase_function=grow_phase_transition,
@@ -104,6 +112,7 @@ def shrink_phase_transition(*args):
 shrink_phase = PhaseConfig(index=3, previous_phase_index=2, next_phase_index=0, name="shrink",
                            kind="Ki67PositivePostMitotic",
                            timing=TimingConfig(phase_duration=100, fixed_duration=False),
+                           events=EventConfig(division_at_phase_exit=False, removal_at_phase_exit=False),
                            volume=VolumeConfig(simulated_cell_volume=1),
                            functions=FunctionsConfig(entry_function_args=[None],
                                                      check_transition_to_next_phase_function=shrink_phase_transition,

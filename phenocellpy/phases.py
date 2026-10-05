@@ -35,6 +35,7 @@ from numpy import log
 from numpy.random import uniform
 
 from phenocellpy.cell_volume import CellVolumes
+from phenocellpy.types.validators import not_none
 from phenocellpy.types import PhaseConfig, TimingConfig, VolumeConfig, VolumeRatesConfig, EventConfig, FunctionsConfig
 
 from copy import deepcopy
@@ -132,6 +133,13 @@ class Phase:
         # assignments only run the single-field checks, the functions might have changed since the config was built
         config.functions.validate()
 
+        # after filling from the class' defaults these must be set
+        for name, value in (("name", config.name), ("phase_duration", config.timing.phase_duration),
+                            ("fixed_duration", config.timing.fixed_duration),
+                            ("division_at_phase_exit", config.events.division_at_phase_exit),
+                            ("removal_at_phase_exit", config.events.removal_at_phase_exit)):
+            not_none(name, value)
+
         self.config = config
 
         self.index = config.index
@@ -219,7 +227,12 @@ class Phase:
 
         :rtype: PhaseConfig
         """
-        return PhaseConfig(functions=FunctionsConfig(user_phase_time_step_args=(None,)))
+        return PhaseConfig(
+            name="unnamed",
+            timing=TimingConfig(phase_duration=10, fixed_duration=False),
+            events=EventConfig(division_at_phase_exit=False, removal_at_phase_exit=False),
+            functions=FunctionsConfig(user_phase_time_step_args=(None,)),
+        )
 
     def update_volume(self):
         """
@@ -356,6 +369,7 @@ class SenescentPhase(Phase):
         return PhaseConfig(
             name="senescent", index=9999, next_phase_index=9999,
             timing=TimingConfig(phase_duration=60 * 24 * 60, fixed_duration=True),
+            events=EventConfig(division_at_phase_exit=False, removal_at_phase_exit=False),
             volume=VolumeConfig(rates=VolumeRatesConfig(cytoplasm_volume_change_rate=0, nuclear_volume_change_rate=0,
                                                     calcification_rate=0)),
         )
@@ -383,6 +397,7 @@ class Ki67Negative(Phase):
         return PhaseConfig(
             name="Ki 67-", index=0, previous_phase_index=1, next_phase_index=1,
             timing=TimingConfig(phase_duration=4.59 * 60, fixed_duration=False),
+            events=EventConfig(division_at_phase_exit=False, removal_at_phase_exit=False),
         )
 
 
@@ -533,6 +548,7 @@ class G0G1(Phase):
         return PhaseConfig(
             name="G0/G1", index=0, previous_phase_index=2, next_phase_index=1,
             timing=TimingConfig(phase_duration=5.15 * 60.0, fixed_duration=False),
+            events=EventConfig(division_at_phase_exit=False, removal_at_phase_exit=False),
         )
 
 
@@ -600,6 +616,7 @@ class S(Phase):
         return PhaseConfig(
             name="S", index=1, previous_phase_index=0, next_phase_index=2,
             timing=TimingConfig(phase_duration=8 * 60.0, fixed_duration=False),
+            events=EventConfig(division_at_phase_exit=False, removal_at_phase_exit=False),
         )
 
 
@@ -717,6 +734,7 @@ class NecrosisSwell(Phase):
         return PhaseConfig(
             name="Necrotic (swelling)", index=0, previous_phase_index=0, next_phase_index=1,
             timing=TimingConfig(phase_duration=9e99, fixed_duration=False),
+            events=EventConfig(division_at_phase_exit=False, removal_at_phase_exit=False),
             volume=VolumeConfig(relative_rupture_volume=2,
                                 rates=VolumeRatesConfig(cytoplasm_volume_change_rate=0.0032 / 60.0,
                                                         nuclear_volume_change_rate=0.013 / 60.0,
