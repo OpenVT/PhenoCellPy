@@ -5,7 +5,7 @@ from phenocellpy.types.base import Validated
 from phenocellpy.types.validators import (not_none, positive, non_negative, fraction, boolean, integer,
                                           non_empty_str, function, function_or_false, sequence)
 
-from typing import Union
+from typing import Union, Tuple, List, Dict   
 
 # Runtime state (time in phase, current volumes, ...) belongs to the Phase/Phenotype objects, not to these configs.
 #
@@ -33,7 +33,7 @@ class VolumeRatesConfig(Validated):
     calcification_rate: Union[float, None] = field(default=None, metadata={"checks": (non_negative,)})
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: Dict):
         cls._reject_unknown_keys(data)
         return cls(**data)
 
@@ -74,7 +74,7 @@ class VolumeConfig(Validated):
             raise TypeError(f"'rates' must be a VolumeRatesConfig. Got {type(self.rates).__name__}.")
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: Dict):
         cls._reject_unknown_keys(data)
         return cls(**{**data, "rates": VolumeRatesConfig.from_dict(data.get("rates", {}))})
 
@@ -92,7 +92,7 @@ class TimingConfig(Validated):
     fixed_duration: bool = field(default=False, metadata={"checks": (not_none, boolean)})
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: Dict):
         cls._reject_unknown_keys(data)
         return cls(**data)
 
@@ -108,7 +108,7 @@ class EventConfig(Validated):
     removal_at_phase_exit: bool = field(default=False, metadata={"checks": (not_none, boolean)})
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: Dict):
         cls._reject_unknown_keys(data)
         return cls(**data)
 
@@ -133,16 +133,16 @@ class FunctionsConfig(Validated):
     :param *_args: Args (list or tuple) for the function of the same name. Required if the function is defined
     """
     entry_function: object = field(default=None, metadata={"checks": (function_or_false,)})
-    entry_function_args: Union[list, tuple, None] = field(default=None, metadata={"checks": (sequence,)})
+    entry_function_args: Union[List, Tuple, None] = field(default=None, metadata={"checks": (sequence,)})
     exit_function: object = field(default=None, metadata={"checks": (function_or_false,)})
-    exit_function_args: Union[list, tuple, None] = field(default=None, metadata={"checks": (sequence,)})
+    exit_function_args: Union[List, Tuple, None] = field(default=None, metadata={"checks": (sequence,)})
     arrest_function: object = field(default=None, metadata={"checks": (function_or_false,)})
-    arrest_function_args: Union[list, tuple, None] = field(default=None, metadata={"checks": (sequence,)})
+    arrest_function_args: Union[List, Tuple, None] = field(default=None, metadata={"checks": (sequence,)})
     check_transition_to_next_phase_function: object = field(default=None, metadata={"checks": (function_or_false,)})
-    check_transition_to_next_phase_function_args: Union[list, tuple, None] = field(default=None,
+    check_transition_to_next_phase_function_args: Union[List, Tuple, None] = field(default=None,
                                                                              metadata={"checks": (sequence,)})
     user_phase_time_step: object = field(default=None, metadata={"checks": (function,)})
-    user_phase_time_step_args: Union[list, tuple, None] = field(default=None, metadata={"checks": (sequence,)})
+    user_phase_time_step_args: Union[List, Tuple, None] = field(default=None, metadata={"checks": (sequence,)})
 
     def validate(self):
         for name in ("entry_function", "exit_function", "arrest_function", "check_transition_to_next_phase_function",
@@ -151,7 +151,7 @@ class FunctionsConfig(Validated):
                 raise ValueError(f"'{name}' is defined but '{name}_args' is not. Expected a list or tuple.")
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: Dict):
         cls._reject_unknown_keys(data)
         return cls(**data)
 
@@ -187,7 +187,7 @@ class PhaseConfig(Validated):
                                 f"Got {type(value).__name__}.")
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: Dict):
         cls._reject_unknown_keys(data)
         kwargs = {key: data[key] for key in ("name", "index", "kind", "previous_phase_index", "next_phase_index")
                   if key in data}
@@ -223,11 +223,11 @@ class PhenotypeConfig(Validated):
     dt: float = field(default=1.0, metadata={"checks": (not_none, positive)})
     time_unit: str = field(default="min", metadata={"checks": (not_none, non_empty_str)})
     space_unit: str = field(default="micrometer", metadata={"checks": (not_none, non_empty_str)})
-    phases: tuple[PhaseConfig, ...] = ()
+    phases: Tuple[PhaseConfig, ...] = ()
     senescent_phase: Union[PhaseConfig, bool, None] = None
     starting_phase_index: Union[int, None] = field(default=0, metadata={"checks": (integer,)})
     user_phenotype_time_step: object = field(default=None, metadata={"checks": (function,)})
-    user_phenotype_time_step_args: Union[list, tuple, None] = field(default=(None,), metadata={"checks": (sequence,)})
+    user_phenotype_time_step_args: Union[List, Tuple, None] = field(default=(None,), metadata={"checks": (sequence,)})
 
     def validate(self):
         self.phases = tuple(self.phases)
@@ -266,7 +266,7 @@ class PhenotypeConfig(Validated):
                              f"`user_phenotype_time_step_args` is not. Expected a list or tuple.")
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: Dict):
         """
         Builds the config from a dict (e.g., loaded from JSON). Missing keys take the dataclass defaults.
         `"senescent_phase": false` disables the senescent phase; `null` or omitting it uses the default one.

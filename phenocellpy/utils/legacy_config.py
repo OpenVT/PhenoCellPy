@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from phenocellpy.types import (PhenotypeConfig, PhaseConfig, TimingConfig, VolumeConfig, VolumeRatesConfig,
                                EventConfig, FunctionsConfig)
-from typing import Union
+from typing import Union, List
 
 def build_cell_volumes_config_legacy(
         target_fluid_fraction=None,
@@ -86,13 +86,13 @@ def build_phase_config_legacy(
         fixed_duration: bool = False,
         phase_duration: float = 10,
         entry_function=None,
-        entry_function_args: list = None,
+        entry_function_args: List = None,
         exit_function=None,
-        exit_function_args: list = None,
+        exit_function_args: List = None,
         arrest_function=None,
-        arrest_function_args: list = None,
+        arrest_function_args: List = None,
         check_transition_to_next_phase_function=None,
-        check_transition_to_next_phase_function_args: list = None,
+        check_transition_to_next_phase_function_args: List = None,
         simulated_cell_volume: float = None,
         cytoplasm_volume_change_rate=None,
         nuclear_volume_change_rate=None,
@@ -170,7 +170,7 @@ def build_phenotype_config_legacy(
         dt: float = 1,
         time_unit: str = "min",
         space_unit="micrometer",
-        phases: list = None,
+        phases: List = None,
         senescent_phase: Union[PhaseConfig, bool, None] = None,
         starting_phase_index: int = 0,
         user_phenotype_time_step=None,

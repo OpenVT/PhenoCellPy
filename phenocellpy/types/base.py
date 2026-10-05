@@ -1,5 +1,5 @@
 from dataclasses import fields, replace
-
+from typing import Dict
 
 class Validated:
     """
@@ -41,7 +41,7 @@ class Validated:
         return replace(self, **changes)
 
     @classmethod
-    def _reject_unknown_keys(cls, data: dict, known=None):
+    def _reject_unknown_keys(cls, data: Dict, known=None):
         """
         Raises a readable error for keys in `data` that are not fields of `cls` (e.g., a typo in a JSON file),
         instead of the ``TypeError`` from the generated ``__init__``.
