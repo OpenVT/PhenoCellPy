@@ -56,7 +56,10 @@ class NecrosisSteppable(SteppableBasePy):
         self.to_necrose = 10  # how many cells we will necrose
         self.target_volume = self.side * self.side
 
-        self.necrotic_phenotype = pcp.phenotypes.NecrosisStandard(dt=self.dt)
+        necrotic_config = pcp.phenotypes.NecrosisStandard.default_config()
+        necrotic_config.dt = self.dt
+
+        self.necrotic_phenotype = pcp.phenotypes.NecrosisStandard(necrotic_config)
         self.volume_conversion_unit = self.target_volume / self.necrotic_phenotype.current_phase.volume.total
 
         for cell in self.cell_list:

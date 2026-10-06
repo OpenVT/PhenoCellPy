@@ -101,15 +101,18 @@ class ConstraintInitializerSteppable(SteppableBasePy):
                         self.cell_field[x:x + side - 1, y: y + side -1, 0] = cell
                         created_cells.add((x, y))
 
-        ki67_advanced_modified_transition = pcp.phenotypes.Ki67Advanced(dt=dt,
-                                                        nuclear_volume_change_rate=[None, 0.0055, None],
-                                                        cytoplasm_volume_change_rate=[None, 0.0045, None],
-                                                        fluid_change_rate=[None, 0.05, None],
-                                                        phase_durations=[74.35 * 60, 13 * 60, 2.5 * 60],
-                                                        check_transition_to_next_phase_functions=
-                                                        [None, Ki67pos_transition, None],
-                                                        check_transition_to_next_phase_functions_args=[None,
-                                                                                        [-9, 1, -9, 1], None])
+        ki67_advanced_config = pcp.phenotypes.Ki67Advanced.default_config()
+        ki67_advanced_config.dt = dt
+        ki67_negative, ki67_positive_pre, ki67_positive_post = ki67_advanced_config.phases
+        ki67_negative.timing.phase_duration = 74.35 * 60
+        ki67_positive_pre.timing.phase_duration = 13 * 60
+        ki67_positive_pre.volume.rates.nuclear_volume_change_rate = 0.0055
+        ki67_positive_pre.volume.rates.cytoplasm_volume_change_rate = 0.0045
+        ki67_positive_pre.volume.rates.fluid_change_rate = 0.05
+        ki67_positive_pre.functions.check_transition_to_next_phase_function = Ki67pos_transition
+        ki67_positive_pre.functions.check_transition_to_next_phase_function_args = [-9, 1, -9, 1]
+        ki67_positive_post.timing.phase_duration = 2.5 * 60
+        ki67_advanced_modified_transition = pcp.phenotypes.Ki67Advanced(ki67_advanced_config)
 
         self.volume_conversion_unit = self.target_volume / ki67_advanced_modified_transition.current_phase.volume.total
 
@@ -471,7 +474,10 @@ class ApoptosisSteppable(SteppableBasePy):
         self.rate_apop = APOPTOSIS_RATE  # 1/min
         #print("apoptosis: ", float(self.rate_apop * dt))
 
-        self.apopto = pcp.phenotypes.ApoptosisStandard(dt=dt, )
+        apopto_config = pcp.phenotypes.ApoptosisStandard.default_config()
+        apopto_config.dt = dt
+
+        self.apopto = pcp.phenotypes.ApoptosisStandard(apopto_config)
         self.selected_cell_ids = []  # list of cells being destroyed
 
     def start(self):
