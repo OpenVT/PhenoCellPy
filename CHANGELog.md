@@ -5,9 +5,10 @@ A brief listing of changes. Most recent changes are listed first.
 #### New:
 
 #### Updates:
-
+1. Added examples to phenocellpy package install.
 #### Bug fixes:
-
+1. Support for local dev install of package ('pip install -e .')
+2. 
 ---
 **Version 0.1.0 release:**
 #### New:
