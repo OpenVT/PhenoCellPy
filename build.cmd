@@ -1,6 +1,7 @@
 @echo off
 copy LICENSE .package\LICENSE >nul
 copy README.md .package\README.md >nul
+copy pyproject.toml .package\pyproject.toml >nul
 
 rmdir /s /q .package\phenocellpy .package\CC3D_examples .package\DeveloperTestZone .package\TF_examples .package\paper 2>nul
 xcopy /e /i phenocellpy .package\phenocellpy
@@ -13,6 +14,7 @@ if errorlevel 1 exit /b %errorlevel%
 
 del .package\LICENSE
 del .package\README.md
+del .package\pyproject.toml
 rmdir /s /q .package\phenocellpy .package\CC3D_examples .package\DeveloperTestZone .package\TF_examples
 
 rmdir /s /q .dist 2>nul
